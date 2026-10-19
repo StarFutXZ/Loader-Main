@@ -1,5 +1,5 @@
 --// =====================================================================
---// Eclipse Loader v3.0 (Base64 Obfuscation)
+--// Eclipse Loader v3.1 (Universal & Hidden)
 --// =====================================================================
 
 local ECLIPSE = {
@@ -7,9 +7,14 @@ local ECLIPSE = {
     minSize = 100,
 }
 
---// ===== Link do Worker escondido em Base64 =====
-local base64Url = "aHR0cHM6Ly9lY2xpcHNlLXByb3h5LmFuZHJlcGVxdWVubzMxLndvcmtlcnMuZGV2"
-local MANIFEST_URL = game:GetService("HttpService"):Base64Decode(base64Url)
+--// ===== Link do Worker escondido com Matemática Básica =====
+-- Cada número corresponde a uma letra do teu link.
+local _codes = {104, 116, 116, 112, 115, 58, 47, 47, 101, 99, 108, 105, 112, 115, 101, 45, 112, 114, 111, 120, 121, 46, 97, 110, 100, 114, 101, 112, 101, 113, 117, 101, 110, 111, 51, 49, 46, 119, 111, 114, 107, 101, 114, 115, 46, 100, 101, 118}
+local _chars = {}
+for _, num in ipairs(_codes) do
+    table.insert(_chars, string.char(num)) -- Converte o número na letra
+end
+local MANIFEST_URL = table.concat(_chars)
 
 --// ===== Utils =====
 local function log(fmt, ...)  print(("[Eclipse] " .. fmt):format(...)) end
