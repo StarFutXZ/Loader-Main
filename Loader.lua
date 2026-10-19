@@ -1,76 +1,179 @@
---// ===== Loader de Teste com Aviso no Ecrã =====
+--// =====================================================================
+--// Eclipse Loader v4.0 (Sistema de HWID e Conta)
+--// =====================================================================
+
+local ECLIPSE = { retries = 2, minSize = 100 }
+
+--// ===== Link do Worker Escondido =====
 local _codes = {104, 116, 116, 112, 115, 58, 47, 47, 101, 99, 108, 105, 112, 115, 101, 45, 112, 114, 111, 120, 121, 46, 97, 110, 100, 114, 101, 112, 101, 113, 117, 101, 110, 111, 51, 49, 46, 119, 111, 114, 107, 101, 114, 115, 46, 100, 101, 118}
 local _chars = {}
 for _, num in ipairs(_codes) do table.insert(_chars, string.char(num)) end
 local BASE_URL = table.concat(_chars)
 
--- Função para mostrar aviso no ecrã
-local function showMsg(msg, isError)
-    local screen = Instance.new("ScreenGui")
-    screen.Parent = game:GetService("CoreGui")
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(0.8, 0, 0.3, 0)
-    label.Position = UDim2.new(0.1, 0, 0.35, 0)
-    label.BackgroundColor3 = isError and Color3.new(0.5, 0, 0) or Color3.new(0, 0.5, 0)
-    label.TextColor3 = Color3.new(1, 1, 1)
-    label.TextSize = 20
-    label.TextWrapped = true
-    label.Text = "[Eclipse] " .. tostring(msg)
-    label.Parent = screen
-    task.delay(8, function() screen:Destroy() end)
-end
+--// ===== Utils =====
+local function log(fmt, ...)  print(("[Eclipse] " .. fmt):format(...)) end
+local function warnLog(fmt, ...) warn(("[Eclipse] " .. fmt):format(...)) end
 
-local userKey = getgenv().Key
-if not userKey or userKey == "" then
-    return showMsg("ERRO: Nenhuma Key detetada no getgenv()!", true)
-end
-
+--// ===== GERADOR DE HWID (ID do Dispositivo) =====
 local function getHWID()
-    if gethwid then return gethwid() end
-    if syn and syn.get_hwid then return syn.get_hwid() end
-    return tostring(game.Players.LocalPlayer.UserId) .. "-DEVICE"
-end
-
-local hwid = getHWID()
-local robloxId = tostring(game.Players.LocalPlayer.UserId)
-
-showMsg("A validar a Key no servidor...", false)
-
-local url = BASE_URL .. "/api/authorize?key=" .. userKey .. "&hwid=" .. hwid .. "&user=" .. robloxId
-local ok, res = pcall(function() return game:HttpGet(url, true) end)
-
-if not ok then
-    return showMsg("Erro de rede! O teu executor bloqueou a ligação.", true)
-end
-
-local decodeOk, data = pcall(function() return game:GetService("HttpService"):JSONDecode(res) end)
-
-if decodeOk and data.valid == true then
-    showMsg("Key Validada com Sucesso! A carregar o jogo...", false)
-    
-    -- Baixa o manifest
-    local s_ok, s_body = pcall(function() return game:HttpGet(BASE_URL, true) end)
-    if not s_ok then return showMsg("Erro ao baixar a lista de jogos.", true) end
-    
-    local data2 = game:GetService("HttpService"):JSONDecode(s_body)
-    local entry = data2[tostring(game.GameId)]
-    
-    if not entry then return showMsg("Jogo não suportado pelo Eclipse.", true) end
-    
-    -- Baixa o script do jogo
-    local scriptUrl = entry.urls[1]
-    local src_ok, source = pcall(function() return game:HttpGet(scriptUrl, true) end)
-    if not src_ok then return showMsg("Erro ao baixar o script do jogo.", true) end
-    
-    -- Executa
-    local chunk, err = loadstring(source)
-    if chunk then
-        pcall(chunk)
-        showMsg("Script executado com sucesso!", false)
-    else
-        showMsg("Erro no script do jogo: " .. tostring(err), true)
+    local hwid = ""
+    -- Tenta apanhar o HWID verdadeiro do executor
+    if gethwid then hwid = gethwid()
+    elseif syn and syn.get_hwid then hwid = syn.get_hwid()
+    elseif getgenv and getgenv().HWID then hwid = getgenv().HWID
     end
-else
-    local motivo = (decodeOk and data.error) or "Erro desconhecido"
-    showMsg("Acesso Negado: " .. motivo, true)
+    
+    -- Se o executor não der, cria um falso baseado no UserId (para não bloquear o user no PC)
+    if hwid == "" or not hwid then
+        hwid = tostring(game.Players.LocalPlayer.UserId) .. "-DEVICE"
+    end
+    return hwid
 end
+
+--// ===== SISTEMA DE KEY =====
+local function checkKey()
+    local userKey = getgenv().Key
+    if not userKey or userKey == "" then
+        warnLog("ERRO: Nenhuma Key detetada!")
+        warnLog("Define a tua key: getgenv().Key = \"Eclipse-XXXX-XXXX-XXXX\"")
+        return false
+    end
+
+    local hwid = getHWID()
+    local robloxId = tostring(game.Players.LocalPlayer.UserId)
+
+    log("A validar a Key no servidor...")
+
+    -- Envia a Key, o HWID e a conta para o Cloudflare
+    local url = BASE_URL .. "/api/authorize?key=" .. userKey .. "&hwid=" .. hwid .. "&user=" .. robloxId
+    local ok, res = pcall(function() return game:HttpGet(url, true) end)
+
+    if not ok then
+        warnLog("Erro de ligação ao servidor.")
+        return false
+    end
+
+    local decodeOk, data = pcall(function() return game:GetService("HttpService"):JSONDecode(res) end)
+
+    if decodeOk and data.valid == true then
+        log("Key Validada! " .. tostring(data.message))
+        return true
+    else
+        local motivo = (decodeOk and data.error) or "Erro desconhecido"
+        warnLog("Acesso Negado: " .. motivo)
+        return false
+    end
+end
+
+--// ===== DOWNLOAD DO MANIFEST E SCRIPT =====
+local function doRequest(url)
+    local ok, res = pcall(function() return game:HttpGet(url, true) end)
+    if ok and type(res) == "string" and #res > 0 then return true, res end
+    return false, "HttpGet falhou"
+end
+
+local function httpGet(url, tries)
+    tries = tries or ECLIPSE.retries
+    local lastErr
+    for attempt = 1, tries + 1 do
+        local ok, res = doRequest(url)
+        if ok and type(res) == "string" then
+            if #res < ECLIPSE.minSize then lastErr = "curta"
+            elseif res:match("^<!DOCTYPE") or res:match("^<html") then lastErr = "HTML"
+            else return true, res end
+        else lastErr = tostring(res) end
+        if attempt <= tries then task.wait(1) end
+    end
+    return false, lastErr
+end
+
+local function loadRemoteManifest()
+    local ok, body = httpGet(BASE_URL)
+    if not ok then
+        warnLog("Erro no download do manifest: %s", tostring(body))
+        return nil
+    end
+
+    local decodeOk, data = pcall(function()
+        return game:GetService("HttpService"):JSONDecode(body)
+    end)
+
+    if not decodeOk or type(data) ~= "table" then
+        warnLog("Erro ao converter JSON.")
+        return nil
+    end
+
+    local converted, count = {}, 0
+    for gameIdStr, entry in pairs(data) do
+        local gameIdNum = tonumber(gameIdStr)
+        if gameIdNum and type(entry) == "table" and type(entry.urls) == "table" then
+            converted[gameIdNum] = entry
+            count = count + 1
+        end
+    end
+
+    log("Manifest carregado (%d jogos).", count)
+    return converted
+end
+
+--// ===== Início =====
+if type(loadstring) ~= "function" then
+    warnLog("Executor sem loadstring!")
+    return
+end
+
+-- 1. Verifica a Key primeiro!
+if not checkKey() then
+    return -- Para o script se a key for inválida ou estiver noutro dispositivo
+end
+
+-- 2. Se a key for válida, continua o carregamento normal
+log("A ligar ao Servidor de Jogos...")
+local SCRIPTS = loadRemoteManifest()
+if not SCRIPTS then
+    warnLog("Falha ao carregar a lista de jogos.")
+    return
+end
+
+local gameId = game.GameId
+local entry  = SCRIPTS[gameId]
+
+if not entry then
+    warnLog("Jogo nao suportado. GameId: %s", tostring(gameId))
+    return
+end
+
+log("Jogo detetado: %s", entry.name)
+
+local source, lastErr
+for i, url in ipairs(entry.urls) do
+    log("A baixar: %s", url)
+    local ok, s = httpGet(url)
+    if ok then
+        source = s
+        break
+    else
+        lastErr = s
+    end
+end
+
+if not source then
+    warnLog("Erro no download do script: %s", tostring(lastErr))
+    return
+end
+
+log("A executar...")
+local compileOk, chunkOrErr = pcall(loadstring, source, "=Eclipse:" .. tostring(gameId))
+if not compileOk or type(chunkOrErr) ~= "function" then
+    warnLog("Erro ao compilar: %s", tostring(chunkOrErr))
+    return
+end
+
+local runOk, runErr = pcall(chunkOrErr)
+if not runOk then
+    warnLog("Erro ao executar: %s", tostring(runErr))
+    return false
+end
+
+log("Sucesso!")
+return true
