@@ -1,83 +1,45 @@
 --// =====================================================================
---// Eclipse Loader v2.1
---// Autor: StarFutXZ (correções aplicadas)
---// Detecta o jogo atual e executa o script correspondente.
+--// Eclipse Loader v2.4
+--// Detecta o jogo atual (via GameId universal) e executa o script.
+--// Usa APENAS o manifest remoto (sem lista de reserva embutida).
 --// =====================================================================
 
 local ECLIPSE = {
-    version    = "2.1.0",
-    retries    = 2,
-    retryWait  = 1,          -- segundos entre tentativas
-    minSize    = 100,        -- FIX: tamanho mínimo pra considerar resposta válida
-    userAgent  = "Eclipse-Loader/2.1", -- FIX: agora realmente usado (se request existir)
-    -- hashes opcionais: [url] = "sha256" (FIX: anti-tamper, preencha se quiser)
-    hashes     = {},
+    version   = "2.4.0",
+    retries   = 2,
+    retryWait = 1,
+    minSize   = 100,
+    userAgent = "Eclipse-Loader/2.4",
+    hashes    = {}, -- [url] = "sha256" (opcional, anti-tamper)
 }
 
---// ===== Mapeamento =====
--- FIX: tabela com metadados (nome + mirrors opcionais)
-local SCRIPTS = {
-    [9534705677] = {
-        name = "Sniper Arena",
-        urls = { "https://raw.githubusercontent.com/StarFutXZ/Eclipse/refs/heads/main/Sniper_Arena.lua" },
-    },
-    [6035872082] = {
-        name = "Rivals",
-        urls = { "https://raw.githubusercontent.com/StarFutXZ/Eclipse/refs/heads/main/Rivals.lua" },
-    },
-    [10563114921] = {
-        name = "Steal An Egg",
-        urls = { "https://raw.githubusercontent.com/tienkhanh1/Chilli-Hub-Script/refs/heads/main/StealAnEgg" },
-    },
-    [66654135] = {
-        name = "Murder Mystery 2",
-        urls = { "https://raw.githubusercontent.com/StarFutXZ/Eclipse/refs/heads/main/Murder%20Mystery%202.lua" },
-    },
-    [7018190066] = {
-        name = "Dead Rails",
-        urls = { "https://darahub.pages.dev/api/script/Darahub-DeadRail/Lobby.lua" }, -- FIX: URL pura
-    },
-    [1686885941] = {
-        name = "99 Nights in the Forest",
-        urls = { "https://raw.githubusercontent.com/StarFutXZ/Eclipse/refs/heads/main/99%20Nights%20in%20the%20Forest.lua" },
-    },
-}
-
--- FIX: fallback por PlaceId (para jogos com sub-places)
-local PLACES = {
-    -- [1234567890] = 9534705677, -- exemplo: place -> gameId
-}
+local MANIFEST_URL = "https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/manifest.json"
 
 --// ===== Utils =====
 local function log(fmt, ...)  print(("[Eclipse] " .. fmt):format(...)) end
 local function warnLog(fmt, ...) warn(("[Eclipse] " .. fmt):format(...)) end
 
--- FIX: detecta qual função HTTP usar (request > syn.request > game:HttpGet)
+-- Detecta a melhor função HTTP disponível
 local function doRequest(url)
     local opts = {
         Url = url,
         Method = "GET",
         HttpHeaders = { ["User-Agent"] = ECLIPSE.userAgent },
     }
-    if typeof and typeof(request) == "function" then
+    if type(request) == "function" then
         local r = request(opts)
-        if r and r.Success and type(r.Body) == "string" then
-            return true, r.Body
-        end
-        return false, r and r.StatusMessage or "request failed"
-    elseif syn and syn.request then
+        if r and r.Success and type(r.Body) == "string" then return true, r.Body end
+        return false, (r and r.StatusMessage) or "request failed"
+    elseif syn and type(syn.request) == "function" then
         local r = syn.request(opts)
-        if r and r.Success and type(r.Body) == "string" then
-            return true, r.Body
-        end
-        return false, r and r.StatusMessage or "syn.request failed"
+        if r and r.Success and type(r.Body) == "string" then return true, r.Body end
+        return false, (r and r.StatusMessage) or "syn.request failed"
     else
-        -- fallback universal (sem headers, sem timeout real)
         return pcall(function() return game:HttpGet(url, true) end)
     end
 end
 
--- FIX: retry + validação de tamanho + detecção de HTML de erro
+-- Retry + validação de tamanho + detecção de HTML/404
 local function httpGet(url, tries)
     tries = tries or ECLIPSE.retries
     local lastErr
@@ -98,50 +60,83 @@ local function httpGet(url, tries)
         end
         if attempt <= tries then
             log("Falha HTTP (tentativa %d/%d): %s — retry em %ds",
-                attempt, tries + 1, tostring(lastErr), ECLIPSE.retryWait)
-            task.wait(ECLIPSE.retryWait * attempt) -- FIX: backoff linear
+                attempt, tries + 1, tostring(lastErr), ECLIPSE.retryWait * attempt)
+            task.wait(ECLIPSE.retryWait * attempt)
         end
     end
     return false, lastErr
 end
 
--- FIX: checagem de loadstring (voltou)
+-- Carrega o manifest remoto; converte chaves string -> number
+local function loadRemoteManifest()
+    local ok, body = httpGet(MANIFEST_URL)
+    if not ok then
+        warnLog("Não foi possível baixar o manifest: %s", tostring(body))
+        return nil
+    end
+
+    local decodeOk, data = pcall(function()
+        return game:GetService("HttpService"):JSONDecode(body)
+    end)
+
+    if not decodeOk or type(data) ~= "table" then
+        warnLog("Manifest inválido (JSON malformado).")
+        return nil
+    end
+
+    local converted, count = {}, 0
+    for gameIdStr, entry in pairs(data) do
+        local gameIdNum = tonumber(gameIdStr)
+        if gameIdNum and type(entry) == "table" and type(entry.urls) == "table" and #entry.urls > 0 then
+            converted[gameIdNum] = entry
+            count = count + 1
+        end
+    end
+
+    if count == 0 then
+        warnLog("Manifest vazio ou sem jogos válidos.")
+        return nil
+    end
+
+    log("Manifest carregado (%d jogos).", count)
+    return converted
+end
+
+--// ===== Pré-checagens =====
 if type(loadstring) ~= "function" then
     warnLog("Executor sem loadstring; abortando.")
     return
 end
 
---// ===== Seleção do script =====
-local gameId  = game.GameId
-local placeId = game.PlaceId
-local entry   = SCRIPTS[gameId]
-
--- FIX: fallback por PlaceId se GameId não mapeado
-if not entry and PLACES[placeId] then
-    entry = SCRIPTS[PLACES[placeId]]
-    if entry then
-        log("GameId não mapeado, usando fallback por PlaceId=%d", placeId)
-    end
-end
-
-if not entry then
-    warnLog("Jogo não suportado. GameId=%s PlaceId=%s Name=%q",
-        tostring(gameId), tostring(placeId), game.Name)
+--// ===== Carregar manifest (obrigatório) =====
+local SCRIPTS = loadRemoteManifest()
+if not SCRIPTS then
+    warnLog("Manifest indisponível. Não é possível continuar.")
     return
 end
 
-log("Jogo detectado: %s (GameId=%d, PlaceId=%d)", entry.name, gameId, placeId)
+--// ===== Seleção do script =====
+local gameId = game.GameId
+local entry  = SCRIPTS[gameId]
 
---// ===== Download com mirrors =====
+if not entry then
+    warnLog("Jogo não suportado. GameId=%s PlaceId=%s Name=%q",
+        tostring(gameId), tostring(game.PlaceId), game.Name)
+    return
+end
+
+log("Jogo detectado: %s (GameId=%d, PlaceId=%d)",
+    entry.name, gameId, game.PlaceId)
+
+--// ===== Download (mirrors + hash opcional) =====
 local source, lastErr
 for i, url in ipairs(entry.urls) do
     log("Baixando (%d/%d): %s", i, #entry.urls, url)
     local ok, s = httpGet(url)
     if ok then
-        -- FIX: validação de hash opcional
         local expected = ECLIPSE.hashes[url]
         if expected then
-            local h = (syn and syn.crypt and syn.crypt.hash) and syn.crypt.hash(s, "sha256")
+            local h = syn and syn.crypt and syn.crypt.hash and syn.crypt.hash(s, "sha256")
             if h and h:lower() ~= expected:lower() then
                 lastErr = "hash mismatch"
                 warnLog("Hash inválido para %s", url)
@@ -166,8 +161,7 @@ end
 
 log("Download concluído (%d bytes).", #source)
 
---// ===== Compilação =====
--- FIX: nomear o chunk para erros mais legíveis
+--// ===== Compilação (chunk nomeado) =====
 local compileOk, chunkOrErr = pcall(loadstring, source, "=Eclipse:" .. tostring(gameId))
 if not compileOk or type(chunkOrErr) ~= "function" then
     warnLog("Falha ao compilar: %s", tostring(chunkOrErr))
@@ -178,11 +172,10 @@ end
 log("Executando %s...", entry.name)
 local runOk, runErr = pcall(chunkOrErr)
 if not runOk then
-    -- FIX: stack trace completo quando disponível
     local tb = (debug and debug.traceback) and debug.traceback(tostring(runErr), 2) or tostring(runErr)
     warnLog("Erro em runtime:\n%s", tb)
     return false
-else
-    log("Script executado com sucesso.")
-    return true
 end
+
+log("Script executado com sucesso.")
+return true
