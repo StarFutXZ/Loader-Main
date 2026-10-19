@@ -1,47 +1,26 @@
 --// =====================================================================
---// Eclipse Loader v2.8 (Fix)
+--// Eclipse Loader v3.0 (Base64 Obfuscation)
 --// =====================================================================
 
 local ECLIPSE = {
-    version   = "2.8.0",
-    retries   = 2,
-    retryWait = 1,
-    minSize   = 100,
+    retries = 2,
+    minSize = 100,
 }
 
--- Link do Worker Ofuscado (XOR)
-local _k = 0x5A
-local _b = {37, 55, 55, 41, 15, 10, 10, 48, 57, 41, 41, 41, 10, 36, 54, 45, 41, 55, 45, 34, 55, 50, 56, 50, 40, 55, 50, 43, 55, 55, 46, 55, 49, 57, 10, 60, 55, 53, 42, 41, 39, 38, 55, 54, 55, 55, 10, 36, 54, 45, 41, 55, 45, 34, 55, 50, 56, 50, 40, 55, 50, 43, 55, 55, 46, 55, 49, 57, 15, 55, 46, 55, 49, 57, 10, 55}
-
-local function deobf(bytes)
-    local t = {}
-    for _, b in ipairs(bytes) do
-        t[#t+1] = string.char(bit32.bxor(b, _k))
-    end
-    return table.concat(t)
-end
-
-local MANIFEST_URL = deobf(_b)
+--// ===== Link do Worker escondido em Base64 =====
+local base64Url = "aHR0cHM6Ly9lY2xpcHNlLXByb3h5LmFuZHJlcGVxdWVubzMxLndvcmtlcnMuZGV2"
+local MANIFEST_URL = game:GetService("HttpService"):Base64Decode(base64Url)
 
 --// ===== Utils =====
 local function log(fmt, ...)  print(("[Eclipse] " .. fmt):format(...)) end
 local function warnLog(fmt, ...) warn(("[Eclipse] " .. fmt):format(...)) end
 
--- Pedido HTTP simplificado (sem headers extra)
 local function doRequest(url)
-    if type(request) == "function" then
-        local r = request({ Url = url, Method = "GET" })
-        if r and r.Success and type(r.Body) == "string" then return true, r.Body end
-        return false, (r and r.StatusMessage) or "request failed"
-    elseif syn and type(syn.request) == "function" then
-        local r = syn.request({ Url = url, Method = "GET" })
-        if r and r.Success and type(r.Body) == "string" then return true, r.Body end
-        return false, (r and r.StatusMessage) or "syn.request failed"
-    else
-        local ok, body = pcall(function() return game:HttpGet(url, true) end)
-        if ok and type(body) == "string" and #body > 0 then return true, body end
-        return false, "HttpGet falhou"
+    local ok, res = pcall(function() return game:HttpGet(url, true) end)
+    if ok and type(res) == "string" and #res > 0 then
+        return true, res
     end
+    return false, "HttpGet falhou"
 end
 
 local function httpGet(url, tries)
@@ -53,7 +32,7 @@ local function httpGet(url, tries)
             if #res < ECLIPSE.minSize then
                 lastErr = "resposta muito curta"
             elseif res:match("^<!DOCTYPE") or res:match("^<html") then
-                lastErr = "recebeu HTML em vez de script"
+                lastErr = "recebeu HTML"
             else
                 return true, res
             end
@@ -61,7 +40,7 @@ local function httpGet(url, tries)
             lastErr = tostring(res)
         end
         if attempt <= tries then
-            task.wait(ECLIPSE.retryWait)
+            task.wait(1)
         end
     end
     return false, lastErr
