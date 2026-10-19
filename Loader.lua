@@ -1,4 +1,4 @@
---// ===== Eclipse Loader v4.5 (Com Timeout) =====
+--// ===== Eclipse Loader v4.6 (HttpService Nativo) =====
 local _codes = {104, 116, 116, 112, 115, 58, 47, 47, 101, 99, 108, 105, 112, 115, 101, 45, 112, 114, 111, 120, 121, 46, 97, 110, 100, 114, 101, 112, 101, 113, 117, 101, 110, 111, 51, 49, 46, 119, 111, 114, 107, 101, 114, 115, 46, 100, 101, 118}
 local _chars = {}
 for _, num in ipairs(_codes) do table.insert(_chars, string.char(num)) end
@@ -26,28 +26,19 @@ local function updateStatus(text, isError)
     statusLabel.BackgroundColor3 = isError and Color3.fromRGB(150, 30, 30) or Color3.fromRGB(30, 150, 30)
 end
 
--- FUNÇÃO DE DOWNLOAD COM TIMEOUT (Evita que o script congele)
-local function httpGetWithTimeout(url, timeout)
-    local result = nil
-    local finished = false
-    
-    -- Corre o pedido em segundo plano
-    task.spawn(function()
-        local ok, res = pcall(function() return game:HttpGet(url, true) end)
-        if ok then result = res end
-        finished = true
+-- Usa o HttpService nativo em vez do game:HttpGet que congela
+local function safeHttpGet(url)
+    local HttpService = game:GetService("HttpService")
+    local ok, res = pcall(function()
+        return HttpService:RequestAsync({
+            Url = url,
+            Method = "GET"
+        })
     end)
-    
-    -- Espera até 5 segundos
-    local timer = 0
-    while not finished and timer < timeout do
-        task.wait(0.1)
-        timer = timer + 0.1
+    if ok and res and res.Success then
+        return true, res.Body
     end
-    
-    if not finished then return false, "Timeout" end
-    if not result then return false, "HttpGet bloqueado" end
-    return true, result
+    return false, "Erro HTTP"
 end
 
 local userKey = getgenv().Key or _G.Key
@@ -58,6 +49,7 @@ end
 
 userKey = string.gsub(userKey, "[%s\"']", "")
 updateStatus("A validar Key...", false)
+task.wait(0.5)
 
 local function getHWID()
     if gethwid then return gethwid() end
@@ -69,11 +61,10 @@ local hwid = getHWID()
 local robloxId = tostring(game.Players.LocalPlayer.UserId)
 local url = BASE_URL .. "/api/authorize?key=" .. userKey .. "&hwid=" .. hwid .. "&user=" .. robloxId
 
--- Usa a nova função com limite de 5 segundos
-local ok, res = httpGetWithTimeout(url, 5)
+local ok, res = safeHttpGet(url)
 
 if not ok then
-    updateStatus("Falha na rede (Timeout).", true)
+    updateStatus("Falha de rede!", true)
     task.wait(4) gui:Destroy() return
 end
 
@@ -81,8 +72,9 @@ local decodeOk, data = pcall(function() return game:GetService("HttpService"):JS
 
 if decodeOk and data.valid == true then
     updateStatus("A carregar Jogo...", false)
+    task.wait(0.5)
     
-    local s_ok, s_body = httpGetWithTimeout(BASE_URL, 5)
+    local s_ok, s_body = safeHttpGet(BASE_URL)
     if not s_ok then updateStatus("Erro no Manifest.", true) task.wait(3) gui:Destroy() return end
     
     local data2 = game:GetService("HttpService"):JSONDecode(s_body)
@@ -91,10 +83,14 @@ if decodeOk and data.valid == true then
     if not entry then updateStatus("Jogo não suportado.", true) task.wait(3) gui:Destroy() return end
     
     updateStatus("A transferir Script...", false)
-    local src_ok, source = httpGetWithTimeout(entry.urls[1], 10)
+    task.wait(0.5)
+    
+    local src_ok, source = safeHttpGet(entry.urls[1])
     if not src_ok then updateStatus("Erro no Script.", true) task.wait(3) gui:Destroy() return end
     
     updateStatus("A Executar...", false)
+    task.wait(0.5)
+    
     local chunk, err = loadstring(source)
     if chunk then
         pcall(chunk)
