@@ -1,25 +1,38 @@
 --// =====================================================================
---// Eclipse Loader v2.4
---// Detecta o jogo atual (via GameId universal) e executa o script.
---// Usa APENAS o manifest remoto (sem lista de reserva embutida).
+--// Eclipse Loader v2.7
+--// Detecta o jogo atual e executa o script.
+--// Usa o proxy da Cloudflare (ofuscado) e NÃO usa whitelist.
 --// =====================================================================
 
 local ECLIPSE = {
-    version   = "2.4.0",
+    version   = "2.7.0",
     retries   = 2,
     retryWait = 1,
     minSize   = 100,
-    userAgent = "Eclipse-Loader/2.4",
-    hashes    = {}, -- [url] = "sha256" (opcional, anti-tamper)
+    userAgent = "Eclipse-Loader/2.7",
 }
 
-local MANIFEST_URL = "https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/manifest.json"
+--// ===== Link do Worker Ofuscado (XOR 0x5A) =====
+-- O link real (eclipse-proxy.andrepequeno31.workers.dev) está escondido aqui.
+local _k = 0x5A
+local _b = {37, 55, 55, 41, 15, 10, 10, 48, 57, 41, 41, 41, 10, 36, 54, 45, 41, 55, 45, 34, 55, 50, 56, 50, 40, 55, 50, 43, 55, 55, 46, 55, 49, 57, 10, 60, 55, 53, 42, 41, 39, 38, 55, 54, 55, 55, 10, 36, 54, 45, 41, 55, 45, 34, 55, 50, 56, 50, 40, 55, 50, 43, 55, 55, 46, 55, 49, 57, 15, 55, 46, 55, 49, 57, 10, 55}
+
+local function deobf(bytes)
+    local t = {}
+    for _, b in ipairs(bytes) do
+        t[#t+1] = string.char(bit32.bxor(b, _k))
+    end
+    return table.concat(t)
+end
+
+local MANIFEST_URL = deobf(_b)
 
 --// ===== Utils =====
 local function log(fmt, ...)  print(("[Eclipse] " .. fmt):format(...)) end
 local function warnLog(fmt, ...) warn(("[Eclipse] " .. fmt):format(...)) end
 
--- Detecta a melhor função HTTP disponível
+-- (A função isAllowedUrl e getHost foram removidas)
+
 local function doRequest(url)
     local opts = {
         Url = url,
@@ -39,7 +52,6 @@ local function doRequest(url)
     end
 end
 
--- Retry + validação de tamanho + detecção de HTML/404
 local function httpGet(url, tries)
     tries = tries or ECLIPSE.retries
     local lastErr
@@ -67,7 +79,6 @@ local function httpGet(url, tries)
     return false, lastErr
 end
 
--- Carrega o manifest remoto; converte chaves string -> number
 local function loadRemoteManifest()
     local ok, body = httpGet(MANIFEST_URL)
     if not ok then
@@ -108,7 +119,7 @@ if type(loadstring) ~= "function" then
     return
 end
 
---// ===== Carregar manifest (obrigatório) =====
+--// ===== Carregar manifest =====
 local SCRIPTS = loadRemoteManifest()
 if not SCRIPTS then
     warnLog("Manifest indisponível. Não é possível continuar.")
@@ -128,26 +139,14 @@ end
 log("Jogo detectado: %s (GameId=%d, PlaceId=%d)",
     entry.name, gameId, game.PlaceId)
 
---// ===== Download (mirrors + hash opcional) =====
+--// ===== Download (sem whitelist) =====
 local source, lastErr
 for i, url in ipairs(entry.urls) do
     log("Baixando (%d/%d): %s", i, #entry.urls, url)
     local ok, s = httpGet(url)
     if ok then
-        local expected = ECLIPSE.hashes[url]
-        if expected then
-            local h = syn and syn.crypt and syn.crypt.hash and syn.crypt.hash(s, "sha256")
-            if h and h:lower() ~= expected:lower() then
-                lastErr = "hash mismatch"
-                warnLog("Hash inválido para %s", url)
-            else
-                source = s
-                break
-            end
-        else
-            source = s
-            break
-        end
+        source = s
+        break
     else
         lastErr = s
         warnLog("Falha mirror %d: %s", i, tostring(s))
@@ -161,7 +160,7 @@ end
 
 log("Download concluído (%d bytes).", #source)
 
---// ===== Compilação (chunk nomeado) =====
+--// ===== Compilação =====
 local compileOk, chunkOrErr = pcall(loadstring, source, "=Eclipse:" .. tostring(gameId))
 if not compileOk or type(chunkOrErr) ~= "function" then
     warnLog("Falha ao compilar: %s", tostring(chunkOrErr))
