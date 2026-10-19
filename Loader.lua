@@ -1,5 +1,5 @@
 --// =====================================================================
---// Eclipse Loader v3.1 (Universal & Hidden)
+--// Eclipse Loader v3.5 (Key via getgenv().Key)
 --// =====================================================================
 
 local ECLIPSE = {
@@ -7,14 +7,13 @@ local ECLIPSE = {
     minSize = 100,
 }
 
---// ===== Link do Worker escondido com Matemática Básica =====
--- Cada número corresponde a uma letra do teu link.
+--// ===== Link do Worker Escondido com Matemática Básica =====
 local _codes = {104, 116, 116, 112, 115, 58, 47, 47, 101, 99, 108, 105, 112, 115, 101, 45, 112, 114, 111, 120, 121, 46, 97, 110, 100, 114, 101, 112, 101, 113, 117, 101, 110, 111, 51, 49, 46, 119, 111, 114, 107, 101, 114, 115, 46, 100, 101, 118}
 local _chars = {}
 for _, num in ipairs(_codes) do
-    table.insert(_chars, string.char(num)) -- Converte o número na letra
+    table.insert(_chars, string.char(num))
 end
-local MANIFEST_URL = table.concat(_chars)
+local BASE_URL = table.concat(_chars)
 
 --// ===== Utils =====
 local function log(fmt, ...)  print(("[Eclipse] " .. fmt):format(...)) end
@@ -51,8 +50,44 @@ local function httpGet(url, tries)
     return false, lastErr
 end
 
+--// ===== SISTEMA DE KEY (getgenv) =====
+local function checkKey()
+    -- 1. Verifica se o utilizador definiu a Key no script
+    local userKey = getgenv().Key
+    
+    if not userKey or userKey == "" or userKey == nil then
+        warnLog("ERRO: Nenhuma Key detetada!")
+        warnLog("Por favor, define a tua key no script (getgenv().Key = \"Eclipse-XXXX-XXXX-XXXX\")")
+        return false
+    end
+
+    log("A validar a Key: %s...", userKey)
+
+    -- 2. Pergunta ao Cloudflare se a key é válida
+    local ok, res = pcall(function()
+        return game:HttpGet(BASE_URL .. "/api/check?key=" .. userKey, true)
+    end)
+
+    if not ok then
+        warnLog("Erro ao ligar ao servidor para validar a Key.")
+        return false
+    end
+
+    local decodeOk, data = pcall(function()
+        return game:GetService("HttpService"):JSONDecode(res)
+    end)
+
+    if decodeOk and type(data) == "table" and data.valid == true then
+        log("Key Valida! A iniciar o Eclipse...")
+        return true
+    else
+        warnLog("Key Invalida ou Expirada. Vai ao Discord para gerares uma nova.")
+        return false
+    end
+end
+
 local function loadRemoteManifest()
-    local ok, body = httpGet(MANIFEST_URL)
+    local ok, body = httpGet(BASE_URL)
     if not ok then
         warnLog("Erro no download do manifest: %s", tostring(body))
         return nil
@@ -84,6 +119,11 @@ end
 if type(loadstring) ~= "function" then
     warnLog("Executor sem loadstring!")
     return
+end
+
+-- AQUI: Verifica a key antes de tudo!
+if not checkKey() then
+    return -- Para o script se a key for inválida
 end
 
 log("A ligar ao Servidor...")
