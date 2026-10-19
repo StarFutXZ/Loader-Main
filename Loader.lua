@@ -1,24 +1,23 @@
---// ===== Eclipse Loader v6.0 (Bypass via GitHub) =====
+--// ===== Eclipse Loader v6.1 (Proxy AllOrigins) =====
+local BASE_URL = "https://eclipse-proxy.andrepequeno31.workers.dev"
+local PROXY_URL = "https://api.allorigins.win/raw?url="
+
 local function notify(title, text)
     pcall(function()
-        game.StarterGui:SetCore("SendNotification", {
-            Title = title,
-            Text = text,
-            Duration = 5
-        })
+        game.StarterGui:SetCore("SendNotification", { Title = title, Text = text, Duration = 5 })
     end)
 end
 
-local BASE_URL = "https://eclipse-proxy.andrepequeno31.workers.dev"
-
--- Usamos o HttpGet para tentar ligar
 local function safeRequest(url)
-    local ok, res = pcall(function() return game:HttpGet(url, true) end)
+    -- Usa o proxy para o telemóvel não bloquear
+    local proxyUrl = PROXY_URL .. url
+    
+    local ok, res = pcall(function() return game:HttpGet(proxyUrl, true) end)
     if ok and res then return true, res end
     
     -- Se o HttpGet falhar, tenta o HttpService
     ok, res = pcall(function()
-        return game:GetService("HttpService"):RequestAsync({Url = url, Method = "GET"})
+        return game:GetService("HttpService"):RequestAsync({Url = proxyUrl, Method = "GET"})
     end)
     if ok and res and res.Success then return true, res.Body end
     
@@ -27,7 +26,7 @@ end
 
 local userKey = getgenv().Key or _G.Key
 if not userKey then
-    notify("Eclipse", "Erro: Key não encontrada!")
+    notify("Eclipse", "Erro: Key nao encontrada!")
     return
 end
 
@@ -41,7 +40,7 @@ notify("Eclipse", "A validar a Key...")
 local ok, res = safeRequest(url)
 
 if not ok then
-    notify("Eclipse", "Erro de rede!")
+    notify("Eclipse", "Erro de rede no proxy!")
     return
 end
 
@@ -56,8 +55,9 @@ if decodeOk and data.valid == true then
     local data2 = game:GetService("HttpService"):JSONDecode(s_body)
     local entry = data2[tostring(game.GameId)]
     
-    if not entry then notify("Eclipse", "Jogo não suportado") return end
+    if not entry then notify("Eclipse", "Jogo nao suportado") return end
     
+    notify("Eclipse", "A transferir o Script...")
     local src_ok, source = safeRequest(entry.urls[1])
     if not src_ok then notify("Eclipse", "Erro no Script") return end
     
