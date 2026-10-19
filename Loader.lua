@@ -1,7 +1,5 @@
 --// =====================================================================
 --// Eclipse Loader v2.7
---// Detecta o jogo atual e executa o script.
---// Usa o proxy da Cloudflare (ofuscado) e NÃO usa whitelist.
 --// =====================================================================
 
 local ECLIPSE = {
@@ -12,8 +10,7 @@ local ECLIPSE = {
     userAgent = "Eclipse-Loader/2.7",
 }
 
---// ===== Link do Worker Ofuscado (XOR 0x5A) =====
--- O link real (eclipse-proxy.andrepequeno31.workers.dev) está escondido aqui.
+-- Link do Worker Ofuscado (XOR)
 local _k = 0x5A
 local _b = {37, 55, 55, 41, 15, 10, 10, 48, 57, 41, 41, 41, 10, 36, 54, 45, 41, 55, 45, 34, 55, 50, 56, 50, 40, 55, 50, 43, 55, 55, 46, 55, 49, 57, 10, 60, 55, 53, 42, 41, 39, 38, 55, 54, 55, 55, 10, 36, 54, 45, 41, 55, 45, 34, 55, 50, 56, 50, 40, 55, 50, 43, 55, 55, 46, 55, 49, 57, 15, 55, 46, 55, 49, 57, 10, 55}
 
@@ -30,8 +27,6 @@ local MANIFEST_URL = deobf(_b)
 --// ===== Utils =====
 local function log(fmt, ...)  print(("[Eclipse] " .. fmt):format(...)) end
 local function warnLog(fmt, ...) warn(("[Eclipse] " .. fmt):format(...)) end
-
--- (A função isAllowedUrl e getHost foram removidas)
 
 local function doRequest(url)
     local opts = {
@@ -139,7 +134,7 @@ end
 log("Jogo detectado: %s (GameId=%d, PlaceId=%d)",
     entry.name, gameId, game.PlaceId)
 
---// ===== Download (sem whitelist) =====
+--// ===== Download =====
 local source, lastErr
 for i, url in ipairs(entry.urls) do
     log("Baixando (%d/%d): %s", i, #entry.urls, url)
