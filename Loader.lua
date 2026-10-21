@@ -1,8 +1,8 @@
---// ===== Eclipse Loader v15.0 (Final Fix) =====
+--// ===== Eclipse Loader v16.0 (Roblox Nativo) =====
 local userKey = getgenv().Key or _G.Key
 
 if not userKey or userKey == "" then
-    pcall(function() game.StarterGui:SetCore("SendNotification", { Title = "Eclipse", Text = "ERRO: Nenhuma Key!", Duration = 5 }) end)
+    game.StarterGui:SetCore("SendNotification", { Title = "Eclipse", Text = "ERRO: Nenhuma Key!", Duration = 5 })
     return
 end
 
@@ -14,41 +14,38 @@ end
 
 notify("Eclipse", "A validar Key...")
 
--- Usa o AllOrigins
-local authUrl = "https://api.allorigins.win/raw?url=https://eclipse-proxy.andrepequeno31.workers.dev/api/authorize?key=" .. userKey .. "&hwid=DEV&user=" .. tostring(game.Players.LocalPlayer.UserId)
-
-local function getData(url)
-    if request then 
-        local ok, res = pcall(request, {Url = url, Method = "GET"})
-        if ok and res and res.Body then return res.Body end
+-- Usa o HttpService nativo do Roblox (impossível o Delta bloquear a 100%)
+local function makeRequest(url)
+    local HttpService = game:GetService("HttpService")
+    local ok, res = pcall(function()
+        return HttpService:RequestAsync({
+            Url = url,
+            Method = "GET"
+        })
+    end)
+    if ok and res and res.Success then
+        return res.Body
     end
-    local ok, res = pcall(function() return game:HttpGet(url, true) end)
-    if ok and res then return res end
     return nil
 end
 
-local res = getData(authUrl)
+-- Link do Cloudflare (direto)
+local authUrl = "https://eclipse-proxy.andrepequeno31.workers.dev/api/authorize?key=" .. userKey .. "&hwid=DEV&user=" .. tostring(game.Players.LocalPlayer.UserId)
+
+local res = makeRequest(authUrl)
 
 if not res then
-    notify("Eclipse ERRO", "Proxy bloqueado.")
+    notify("Eclipse ERRO", "O Delta bloqueou o HttpService.")
     return
 end
 
--- Limpa a resposta (remove lixo do proxy antes do JSON)
-local limpo = string.match(res, "{.*}")
-
-if not limpo then
-    notify("Eclipse ERRO", "Resposta invalida.")
-    return
-end
-
-local data = game:GetService("HttpService"):JSONDecode(limpo)
+local data = game:GetService("HttpService"):JSONDecode(res)
 
 if data and data.valid == true then
     notify("Eclipse", "Key OK! A carregar...")
     
-    local manifestUrl = "https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/manifest.json"
-    local manifestRes = getData(manifestUrl)
+    -- Lê o manifest do GitHub
+    local manifestRes = makeRequest("https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/manifest.json")
     
     if not manifestRes then
         notify("Eclipse ERRO", "Erro ao ler o GitHub.")
@@ -65,16 +62,17 @@ if data and data.valid == true then
     
     notify("Eclipse", "A transferir " .. entry.name)
     
-    local source = getData(entry.urls[1])
+    local source = makeRequest(entry.urls[1])
     
     if source then
         local chunk, err = loadstring(source)
         if chunk then
             pcall(chunk)
             notify("Eclipse", "Menu carregado!")
+        else
+            notify("Eclipse ERRO", "Erro no script.")
         end
     end
 else
-    local motivo = (data and data.error) or "Desconhecido"
-    notify("Eclipse ERRO", "Negado: " .. motivo)
+    notify("Eclipse ERRO", "Key Invalida.")
 end
