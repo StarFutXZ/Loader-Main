@@ -1,1 +1,21 @@
+name: Sync Manifest
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
 
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Fetch manifest from Cloudflare
+        run: |
+          curl -s -H "User-Agent: EclipseBot" "https://eclipse-proxy.andrepequeno31.workers.dev" -o manifest.json
+      - name: Commit and push
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add manifest.json
+          git commit -m "Auto-update manifest" || exit 0
+          git push
