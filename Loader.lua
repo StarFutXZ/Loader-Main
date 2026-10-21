@@ -1,84 +1,67 @@
---// ===== Eclipse Loader v9.0 (Oficial) =====
-
+--// ===== Eclipse Loader v14.0 (FINAL OFICIAL) =====
 local userKey = getgenv().Key or _G.Key
 
 if not userKey or userKey == "" then
-    game.StarterGui:SetCore("SendNotification", { Title = "Eclipse", Text = "ERRO: Nenhuma Key detetada!", Duration = 5 })
+    pcall(function() game.StarterGui:SetCore("SendNotification", { Title = "Eclipse", Text = "ERRO: Nenhuma Key!", Duration = 5 }) end)
     return
 end
 
--- Limpa a key de espaços ou aspas
 userKey = string.gsub(userKey, "[%s\"']", "")
 
-local BASE_URL = "https://eclipse-proxy.andrepequeno31.workers.dev"
-local PROXY_URL = "https://api.allorigins.win/raw?url="
+local function notify(title, text)
+    pcall(function() game.StarterGui:SetCore("SendNotification", { Title = title, Text = text, Duration = 5 }) end)
+end
 
-local hwid = tostring(game.Players.LocalPlayer.UserId) .. "-DEV"
-local robloxId = tostring(game.Players.LocalPlayer.UserId)
+notify("Eclipse", "A validar Key...")
 
--- 1. Avisa que vai começar
-game.StarterGui:SetCore("SendNotification", { Title = "Eclipse", Text = "A validar a Key...", Duration = 5 })
+-- 1. Valida a Key no Cloudflare via CorsProxy
+local authUrl = "https://corsproxy.io/?https://eclipse-proxy.andrepequeno31.workers.dev/api/authorize?key=" .. userKey .. "&hwid=DEV&user=" .. tostring(game.Players.LocalPlayer.UserId)
 
--- 2. Função que faz os pedidos (usa o request do Delta ou o do Roblox)
 local function getData(url)
-    if request then
-        local res = request({Url = url, Method = "GET"})
-        if res and res.Body then return res.Body end
+    if request then 
+        local ok, res = pcall(request, {Url = url, Method = "GET"})
+        if ok and res and res.Body then return res.Body end
     end
     local ok, res = pcall(function() return game:HttpGet(url, true) end)
     if ok and res then return res end
     return nil
 end
 
--- 3. Valida a Key no Cloudflare
-local authUrl = PROXY_URL .. BASE_URL .. "/api/authorize?key=" .. userKey .. "&hwid=" .. hwid .. "&user=" .. robloxId
-local respostaAuth = getData(authUrl)
+local res = getData(authUrl)
+local data = res and game:GetService("HttpService"):JSONDecode(res)
 
-if not respostaAuth then
-    game.StarterGui:SetCore("SendNotification", { Title = "Eclipse ERRO", Text = "Falha de rede ao ligar ao Servidor.", Duration = 5 })
-    return
-end
-
-local dadosAuth = game:GetService("HttpService"):JSONDecode(respostaAuth)
-
-if dadosAuth.valid == true then
-    game.StarterGui:SetCore("SendNotification", { Title = "Eclipse", Text = "Key OK! A carregar Jogo...", Duration = 5 })
+if data and data.valid == true then
+    notify("Eclipse", "Key OK! A carregar...")
     
-    -- 4. Pede o Manifest (O teu JSON com os jogos) AO CLOUDFLARE
-    local respostaManifest = getData(PROXY_URL .. BASE_URL)
+    -- 2. Lê o manifest DIRETAMENTE do GitHub
+    local manifestUrl = "https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/manifest.json"
+    local manifestRes = getData(manifestUrl)
     
-    if not respostaManifest then
-        game.StarterGui:SetCore("SendNotification", { Title = "Eclipse ERRO", Text = "Falha ao baixar o Manifest.", Duration = 5 })
+    if not manifestRes then
+        notify("Eclipse ERRO", "Erro ao ler o GitHub.")
         return
     end
-
-    local dadosManifest = game:GetService("HttpService"):JSONDecode(respostaManifest)
     
-    -- 5. Procura o ID do jogo atual
-    local entry = dadosManifest[tostring(game.GameId)]
+    local manifest = game:GetService("HttpService"):JSONDecode(manifestRes)
+    local entry = manifest[tostring(game.GameId)]
     
     if not entry then
-        game.StarterGui:SetCore("SendNotification", { Title = "Eclipse ERRO", Text = "Jogo nao suportado.", Duration = 5 })
+        notify("Eclipse ERRO", "Jogo nao suportado.")
         return
     end
     
-    game.StarterGui:SetCore("SendNotification", { Title = "Eclipse", Text = "A transferir Script...", Duration = 5 })
+    notify("Eclipse", "A transferir " .. entry.name)
     
-    -- 6. Baixa o script do jogo
-    local source = getData(PROXY_URL .. entry.urls[1])
+    -- 3. Baixa o script do GitHub
+    local source = getData(entry.urls[1])
     
     if source then
         local chunk, err = loadstring(source)
         if chunk then
             pcall(chunk)
-            game.StarterGui:SetCore("SendNotification", { Title = "Eclipse", Text = "Menu carregado!", Duration = 5 })
-        else
-            game.StarterGui:SetCore("SendNotification", { Title = "Eclipse ERRO", Text = "Erro no script.", Duration = 5 })
+            notify("Eclipse", "Menu carregado!")
         end
-    else
-        game.StarterGui:SetCore("SendNotification", { Title = "Eclipse ERRO", Text = "Erro no download.", Duration = 5 })
     end
 else
-    local motivo = dadosAuth.error or "Invalida"
-    game.StarterGui:SetCore("SendNotification", { Title = "Eclipse ERRO", Text = "Acesso Negado: " .. motivo, Duration = 5 })
+    notify("Eclipse ERRO", "Key Invalida.")
 end
