@@ -1,4 +1,4 @@
---// ===== Eclipse Loader v22.0 (SHA-256) =====
+--// ===== Eclipse Loader v23.0 (Ofuscado) =====
 local userKey = getgenv().Key or _G.Key
 
 if not userKey or userKey == "" then
@@ -14,7 +14,26 @@ end
 
 notify("Eclipse", "A verificar Key...")
 
--- Função de Hash SHA-256 feita à mão (O Delta não bloqueia)
+-- ==========================================
+-- 1. LINKS ESCONDIDOS
+-- ==========================================
+-- Lista de números que formam o link do "secure_keys.json"
+local _c1 = {104, 116, 116, 112, 115, 58, 47, 47, 114, 97, 119, 46, 103, 105, 116, 104, 117, 98, 117, 115, 101, 114, 99, 111, 110, 116, 101, 110, 116, 46, 99, 111, 109, 47, 83, 116, 97, 114, 70, 117, 116, 88, 90, 47, 76, 111, 97, 100, 101, 114, 45, 77, 97, 105, 110, 47, 114, 101, 102, 115, 47, 104, 101, 97, 100, 115, 47, 109, 97, 105, 110, 47, 115, 101, 99, 117, 114, 101, 95, 107, 101, 121, 115, 46, 106, 115, 111, 110}
+-- Lista de números que formam o link do "manifest.json"
+local _c2 = {104, 116, 116, 112, 115, 58, 47, 47, 114, 97, 119, 46, 103, 105, 116, 104, 117, 98, 117, 115, 101, 114, 99, 111, 110, 116, 101, 110, 116, 46, 99, 111, 109, 47, 83, 116, 97, 114, 70, 117, 116, 88, 90, 47, 76, 111, 97, 100, 101, 114, 45, 77, 97, 105, 110, 47, 114, 101, 102, 115, 47, 104, 101, 97, 100, 115, 47, 109, 97, 105, 110, 47, 109, 97, 110, 105, 102, 101, 115, 116, 46, 106, 115, 111, 110}
+
+local function decodeLink(bytes)
+    local t = {}
+    for _, b in ipairs(bytes) do t[#t+1] = string.char(b) end
+    return table.concat(t)
+end
+
+local URL_KEYS = decodeLink(_c1)
+local URL_MANIFEST = decodeLink(_c2)
+
+-- ==========================================
+-- 2. FUNÇÃO DE HASH SHA-256
+-- ==========================================
 local function getSHA256(str)
     local band = bit32.band
     local bxor = bit32.bxor
@@ -86,11 +105,13 @@ local function getData(url)
     return nil
 end
 
--- 1. Lê os hashes do GitHub
-local res = getData("https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/secure_keys.json")
+-- ==========================================
+-- 3. VALIDA A KEY
+-- ==========================================
+local res = getData(URL_KEYS)
 
 if not res then
-    notify("Eclipse ERRO", "Erro ao ler o GitHub.")
+    notify("Eclipse ERRO", "Erro ao ligar ao servidor.")
     return
 end
 
@@ -106,10 +127,13 @@ if data and data.hashes then
     end
 end
 
+-- ==========================================
+-- 4. CARREGA O JOGO
+-- ==========================================
 if isValid then
     notify("Eclipse", "Key OK! A carregar...")
     
-    local manifestRes = getData("https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/manifest.json")
+    local manifestRes = getData(URL_MANIFEST)
     local manifest = game:GetService("HttpService"):JSONDecode(manifestRes)
     local entry = manifest[tostring(game.GameId)]
     
