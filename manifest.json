@@ -21,7 +21,7 @@
   },
   "7018190066": {
     "name": "Blox Strike",
-    "urls": ["loadstring(game:HttpGet("https://raw.githubusercontent.com/StarFutXZ/Loader-Scripts/refs/heads/main/Blox%20Strike.lua"]
+    "urls": ["https://raw.githubusercontent.com/StarFutXZ/Loader-Scripts/refs/heads/main/Blox%20Strike.lua"]
   },
   "1686885941": {
     "name": "99 Nights in the Forest",
