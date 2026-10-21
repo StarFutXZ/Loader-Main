@@ -1,4 +1,4 @@
---// ===== Eclipse Loader v14.0 (FINAL OFICIAL) =====
+--// ===== Eclipse Loader v15.0 (Final Fix) =====
 local userKey = getgenv().Key or _G.Key
 
 if not userKey or userKey == "" then
@@ -14,8 +14,8 @@ end
 
 notify("Eclipse", "A validar Key...")
 
--- 1. Valida a Key no Cloudflare via CorsProxy
-local authUrl = "https://corsproxy.io/?https://eclipse-proxy.andrepequeno31.workers.dev/api/authorize?key=" .. userKey .. "&hwid=DEV&user=" .. tostring(game.Players.LocalPlayer.UserId)
+-- Usa o AllOrigins
+local authUrl = "https://api.allorigins.win/raw?url=https://eclipse-proxy.andrepequeno31.workers.dev/api/authorize?key=" .. userKey .. "&hwid=DEV&user=" .. tostring(game.Players.LocalPlayer.UserId)
 
 local function getData(url)
     if request then 
@@ -28,12 +28,25 @@ local function getData(url)
 end
 
 local res = getData(authUrl)
-local data = res and game:GetService("HttpService"):JSONDecode(res)
+
+if not res then
+    notify("Eclipse ERRO", "Proxy bloqueado.")
+    return
+end
+
+-- Limpa a resposta (remove lixo do proxy antes do JSON)
+local limpo = string.match(res, "{.*}")
+
+if not limpo then
+    notify("Eclipse ERRO", "Resposta invalida.")
+    return
+end
+
+local data = game:GetService("HttpService"):JSONDecode(limpo)
 
 if data and data.valid == true then
     notify("Eclipse", "Key OK! A carregar...")
     
-    -- 2. Lê o manifest DIRETAMENTE do GitHub
     local manifestUrl = "https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/manifest.json"
     local manifestRes = getData(manifestUrl)
     
@@ -52,7 +65,6 @@ if data and data.valid == true then
     
     notify("Eclipse", "A transferir " .. entry.name)
     
-    -- 3. Baixa o script do GitHub
     local source = getData(entry.urls[1])
     
     if source then
@@ -63,5 +75,6 @@ if data and data.valid == true then
         end
     end
 else
-    notify("Eclipse ERRO", "Key Invalida.")
+    local motivo = (data and data.error) or "Desconhecido"
+    notify("Eclipse ERRO", "Negado: " .. motivo)
 end
