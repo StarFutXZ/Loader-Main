@@ -1,278 +1,133 @@
-import discord
-from discord import app_commands
-from discord.ext import tasks
-import aiohttp
-import os
-import asyncio
-import base64
-import hashlib
-import json
-from aiohttp import web
-from datetime import datetime
-from zoneinfo import ZoneInfo
+--// ===== Eclipse Loader v22.0 (SHA-256) =====
+local userKey = getgenv().Key or _G.Key
 
-intents = discord.Intents.default()
-bot = discord.Client(intents=intents)
-tree = app_commands.CommandTree(bot)
+if not userKey or userKey == "" then
+    pcall(function() game.StarterGui:SetCore("SendNotification", { Title = "Eclipse", Text = "ERRO: Nenhuma Key!", Duration = 5 }) end)
+    return
+end
 
-WORKER_URL = "https://eclipse-proxy.andrepequeno31.workers.dev"
-SECRET = "EclipseBot2024!"
-CARGO_PERMITIDO = 1379418842618400898 
+userKey = string.gsub(userKey, "[%s\"']", "")
 
-# O Token do GitHub vai ser lido de forma segura aqui:
-GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
-GITHUB_REPO = "StarFutXZ/Loader-Main"
-GITHUB_FILE_PATH = "secure_keys.json"
+local function notify(title, text)
+    pcall(function() game.StarterGui:SetCore("SendNotification", { Title = title, Text = text, Duration = 5 }) end)
+end
 
-async def api_request(endpoint: str) -> dict:
-    async with aiohttp.ClientSession() as session:
-        async with session.get(f"{WORKER_URL}{endpoint}") as resp:
-            try: return await resp.json()
-            except: return {"error": "Erro."}
+notify("Eclipse", "A verificar Key...")
 
-# ==========================================
-# FUNÇÃO: HASH E ENVIAR PARA O GITHUB
-# ==========================================
-async def sync_keys_to_github():
-    if not GITHUB_TOKEN or "ghp_" not in GITHUB_TOKEN: 
-        print("❌ Token do GitHub não configurado nas variáveis do Render.")
-        return
-    
-    res = await api_request("/api/allkeys")
-    keys = res.get("keys", [])
-    
-    hashed_keys = []
-    for k in keys:
-        hash_obj = hashlib.sha256(k.encode())
-        hashed_keys.append(hash_obj.hexdigest())
-    
-    final_data = json.dumps({"hashes": hashed_keys})
-    content_b64 = base64.b64encode(final_data.encode()).decode()
-    
-    headers = {
-        "Authorization": f"token {GITHUB_TOKEN}",
-        "Accept": "application/vnd.github.v3+json"
+-- Função de Hash SHA-256 feita à mão (O Delta não bloqueia)
+local function getSHA256(str)
+    local band = bit32.band
+    local bxor = bit32.bxor
+    local rrotate = bit32.rrotate
+    local rshift = bit32.rshift
+    local lshift = bit32.lshift
+
+    local K = {
+        0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+        0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+        0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+        0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+        0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+        0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+        0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+        0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
     }
+    local H = {0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19}
     
-    async with aiohttp.ClientSession() as session:
-        get_url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{GITHUB_FILE_PATH}"
-        async with session.get(get_url, headers=headers) as resp:
-            sha = None
-            if resp.status == 200:
-                data = await resp.json()
-                sha = data["sha"]
+    local msg = {str:byte(1, -1)}
+    local bitLen = #msg * 8
+    table.insert(msg, 0x80)
+    while (#msg % 64) ~= 56 do table.insert(msg, 0) end
+    for i = 8, 1, -1 do table.insert(msg, band(rshift(bitLen, (i-1)*8), 0xFF)) end
+
+    for chunkStart = 1, #msg, 64 do
+        local w = {}
+        for i = 1, 16 do w[i] = lshift(msg[chunkStart + (i-1)*4], 24) + lshift(msg[chunkStart + (i-1)*4 + 1], 16) + lshift(msg[chunkStart + (i-1)*4 + 2], 8) + msg[chunkStart + (i-1)*4 + 3] end
+        for i = 17, 64 do
+            local s0 = bxor(rrotate(w[i-15], 7), rrotate(w[i-15], 18), rshift(w[i-15], 3))
+            local s1 = bxor(rrotate(w[i-2], 17), rrotate(w[i-2], 19), rshift(w[i-2], 10))
+            w[i] = band(w[i-16] + s0 + w[i-7] + s1, 0xFFFFFFFF)
+        end
         
-        payload = {"message": "Auto-update secure keys", "content": content_b64}
-        if sha: payload["sha"] = sha
+        local a, b, c, d, e, f, g, h = H[1], H[2], H[3], H[4], H[5], H[6], H[7], H[8]
+        
+        for i = 1, 64 do
+            local S1 = bxor(rrotate(e, 6), rrotate(e, 11), rrotate(e, 25))
+            local ch = bxor(band(e, f), band(bit32.bnot(e), g))
+            local temp1 = band(h + S1 + ch + K[i] + w[i], 0xFFFFFFFF)
+            local S0 = bxor(rrotate(a, 2), rrotate(a, 13), rrotate(a, 22))
+            local maj = bxor(band(a, b), band(a, c), band(b, c))
+            local temp2 = band(S0 + maj, 0xFFFFFFFF)
             
-        async with session.put(get_url, headers=headers, json=payload) as resp:
-            if resp.status in [200, 201]:
-                print("✅ Hashes enviados para o GitHub com sucesso!")
-            else:
-                print(f"❌ Erro ao enviar para o GitHub: {await resp.text()}")
+            h = g; g = f; f = e; e = band(d + temp1, 0xFFFFFFFF)
+            d = c; c = b; b = a; a = band(temp1 + temp2, 0xFFFFFFFF)
+        end
+        
+        H[1] = band(H[1] + a, 0xFFFFFFFF); H[2] = band(H[2] + b, 0xFFFFFFFF)
+        H[3] = band(H[3] + c, 0xFFFFFFFF); H[4] = band(H[4] + d, 0xFFFFFFFF)
+        H[5] = band(H[5] + e, 0xFFFFFFFF); H[6] = band(H[6] + f, 0xFFFFFFFF)
+        H[7] = band(H[7] + g, 0xFFFFFFFF); H[8] = band(H[8] + h, 0xFFFFFFFF)
+    end
 
-# ==========================================
-# SISTEMA WEAO
-# ==========================================
-def construir_payload(corpo_texto: str, footer_texto: str) -> dict:
-    return {
-        "flags": 32768,
-        "components": [{"type": 17, "components": [
-            {"type": 12, "items": [{"media": {"url": "https://cdn.discordapp.com/attachments/1379466761354874954/1548086533112991754/image_3-1.png?ex=6aa5c76f&is=6aa475ef&hm=56aaedad7f98e4d2448aa3b916511d77de15af4a6b7493d769ff6f4e64994b3f&"}}]},
-            {"type": 14, "divider": True, "spacing": 1},
-            {"type": 10, "content": corpo_texto},
-            {"type": 14, "divider": True, "spacing": 1},
-            {"type": 10, "content": f"-# {footer_texto}"},
-        ]}],
-    }
+    local hash = ""
+    for i = 1, 8 do hash = hash .. string.format("%08x", H[i]) end
+    return hash
+end
 
-async def buscar_dados_weao() -> tuple[bool, str]:
-    url = "https://weao.xyz/api/status/exploits"
-    headers = {"User-Agent": "WEAO-3PService"}
-    async with aiohttp.ClientSession(headers=headers) as session:
-        async with session.get(url, timeout=30) as response:
-            if response.status != 200: return False, "Erro na API WEAO."
-            dados = await response.json()
+local keyHash = getSHA256(userKey)
 
-    windows_exploits, mac_exploits, windows_externals = [], [], []
-    nomes_externals_conhecidos = ["serotonin", "matcha", "severe", "lumen", "matrix hub", "melatonin", "axis", "photon", "ronin", "dx9ware v2", "dx9ware"]
+local function getData(url)
+    if request then 
+        local ok, res = pcall(request, {Url = url, Method = "GET"})
+        if ok and res and res.Body then return res.Body end
+    end
+    local ok, res = pcall(function() return game:HttpGet(url, true) end)
+    if ok and res then return res end
+    return nil
+end
 
-    if isinstance(dados, list):
-        for exp in dados:
-            nome = exp.get("title", "Desconhecido")
-            versao = exp.get("version", "")
-            atualizado = exp.get("updateStatus", False)
-            status_emoji = "<:zw_GreenCircle:1547801001241608315>" if atualizado else "<:zw_RedCircle:1547800979242745876>"
-            linha = f"- {nome} | `{versao}` | {status_emoji}"
-            nome_lower = nome.lower()
-            plataforma = str(exp.get("platform", "")).lower()
-            tipo = str(exp.get("type", "")).lower()
-            is_external = exp.get("isExternal", False) or exp.get("external", False)
+-- 1. Lê os hashes do GitHub
+local res = getData("https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/secure_keys.json")
 
-            if "mac" in plataforma or "mac" in tipo or "mac" in nome_lower: mac_exploits.append(linha)
-            elif is_external or any(ext in nome_lower for ext in nomes_externals_conhecidos) or "external" in tipo: windows_externals.append(linha)
-            else: windows_exploits.append(linha)
+if not res then
+    notify("Eclipse ERRO", "Erro ao ler o GitHub.")
+    return
+end
 
-    blocos = []
-    if windows_exploits: blocos.append("**Windows Exploits**\n" + "\n".join(windows_exploits))
-    if mac_exploits: blocos.append("\n**Mac Exploits**\n" + "\n".join(mac_exploits))
-    if windows_externals: blocos.append("\n**Windows Externals**\n" + "\n".join(windows_externals))
-    return True, "\n".join(blocos).strip()
+local data = game:GetService("HttpService"):JSONDecode(res)
+local isValid = false
 
-@tasks.loop(minutes=15)
-async def loop_atualizar_status():
-    ok, corpo_texto = await buscar_dados_weao()
-    if not ok: return
-    hora = datetime.now(ZoneInfo("Europe/Lisbon")).strftime("%H:%M")
-    payload = construir_payload(corpo_texto, f"Provided by weao.xyz • Atualizado às {hora}")
-    headers = {"Authorization": f"Bot {os.environ.get('DISCORD_TOKEN')}", "Content-Type": "application/json"}
-    async with aiohttp.ClientSession() as session:
-        for guild in bot.guilds:
-            for channel in guild.text_channels:
-                async with session.get(f"https://discord.com/api/v10/channels/{channel.id}/messages?limit=5", headers=headers) as resp:
-                    if resp.status != 200: continue
-                    messages = await resp.json()
-                    for msg in messages:
-                        if msg["author"]["id"] == bot.user.id and "WEAO" in msg.get("content", ""):
-                            edit_url = f"https://discord.com/api/v10/channels/{channel.id}/messages/{msg['id']}"
-                            await session.patch(edit_url, json=payload, headers=headers)
-                            break
+if data and data.hashes then
+    for _, h in ipairs(data.hashes) do
+        if h == keyHash then
+            isValid = true
+            break
+        end
+    end
+end
 
-@loop_atualizar_status.before_loop
-async def before_loop(): await bot.wait_until_ready()
-
-# ==========================================
-# MODAIS E VIEWS (Painéis)
-# ==========================================
-class ModalGetScript(discord.ui.Modal, title="Obter Script"):
-    key_input = discord.ui.TextInput(label="Cola aqui a tua Key", placeholder="Eclipse-XXXX-XXXX-XXXX")
-    async def on_submit(self, interaction: discord.Interaction):
-        await interaction.response.defer(ephemeral=True, thinking=True)
-        texto = ("```lua\n" f"getgenv().Key = \"{self.key_input.value}\"\n" "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/Loader.lua?v=21\"))()\n" "```")
-        await interaction.followup.send(texto, ephemeral=True)
-
-class ModalRedeem(discord.ui.Modal, title="Resgatar Key"):
-    key_input = discord.ui.TextInput(label="Cola aqui a tua Key")
-    async def on_submit(self, interaction: discord.Interaction):
-        await interaction.response.defer(ephemeral=True, thinking=True)
-        res = await api_request(f"/api/redeem?key={self.key_input.value}&user={interaction.user.id}")
-        if res.get("success"):
-            await interaction.followup.send(f"✅ Key vinculada!", ephemeral=True)
-            await sync_keys_to_github()
-        else:
-            await interaction.followup.send(f"❌ {res.get('error', 'Erro')}", ephemeral=True)
-
-class ModalDeleteKey(discord.ui.Modal, title="Eliminar Key"):
-    key_input = discord.ui.TextInput(label="Cola aqui a Key a eliminar")
-    async def on_submit(self, interaction: discord.Interaction):
-        await interaction.response.defer(ephemeral=True, thinking=True)
-        res = await api_request(f"/api/delete?key={self.key_input.value}&secret={SECRET}")
-        if res.get("success"):
-            await interaction.followup.send(f"✅ Key eliminada.", ephemeral=True)
-            await sync_keys_to_github()
-        else:
-            await interaction.followup.send(f"❌ {res.get('error', 'Erro')}", ephemeral=True)
-
-class MenuKeysView(discord.ui.View):
-    def __init__(self, keys, user_id):
-        super().__init__(timeout=120)
-        self.user_id = user_id
-        options = [discord.SelectOption(label=k, description="Clica para copiar", value=k, emoji="🔑") for k in keys]
-        select = discord.ui.Select(placeholder="Seleciona...", options=options)
-        select.callback = self.select_callback
-        self.add_item(select)
-    async def select_callback(self, interaction: discord.Interaction):
-        if interaction.user.id != self.user_id: return
-        await interaction.response.send_message(f"`{interaction.data['values'][0]}`", ephemeral=True)
-
-class PainelView(discord.ui.View):
-    def __init__(self): super().__init__(timeout=None)
-    @discord.ui.button(label="Get Script", style=discord.ButtonStyle.success, emoji="📜", custom_id="btn_get_script", row=0)
-    async def btn_get_script(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_modal(ModalGetScript())
-    @discord.ui.button(label="Redeem Key", style=discord.ButtonStyle.primary, emoji="🎟️", custom_id="btn_redeem_key", row=0)
-    async def btn_redeem_key(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_modal(ModalRedeem())
-    @discord.ui.button(label="Reset HWID", style=discord.ButtonStyle.danger, emoji="🔄", custom_id="btn_reset_hwid", row=0)
-    async def btn_reset_hwid(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.defer(ephemeral=True, thinking=True)
-        res = await api_request(f"/api/mykeys?user={interaction.user.id}")
-        keys = res.get("keys", [])
-        if not keys: return await interaction.followup.send("❌ Sem keys.", ephemeral=True)
-        view = discord.ui.View()
-        for k in keys: view.add_item(ResetButton(k))
-        await interaction.followup.send("🔽 Seleciona:", view=view, ephemeral=True)
-    @discord.ui.button(label="Minhas Keys", style=discord.ButtonStyle.secondary, emoji="📋", custom_id="btn_minhas_keys", row=1)
-    async def btn_minhas_keys(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.defer(ephemeral=True, thinking=True)
-        res = await api_request(f"/api/mykeys?user={interaction.user.id}")
-        keys = res.get("keys", [])
-        if not keys: return await interaction.followup.send("❌ Sem keys.", ephemeral=True)
-        await interaction.followup.send("📋 Seleciona:", view=MenuKeysView(keys, interaction.user.id), ephemeral=True)
-
-class AdminView(discord.ui.View):
-    def __init__(self): super().__init__(timeout=None)
-    @discord.ui.button(label="Gerar Key", style=discord.ButtonStyle.success, emoji="🔑", custom_id="btn_admin_gerar_key", row=0)
-    async def btn_gerar_key(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if CARGO_PERMITIDO not in [role.id for role in interaction.user.roles]: return await interaction.response.send_message("❌ Sem permissão.", ephemeral=True)
-        await interaction.response.defer(ephemeral=True, thinking=True)
-        res = await api_request(f"/api/create?secret={SECRET}&user={interaction.user.id}")
-        key = res.get("key", "Erro")
-        await interaction.followup.send(f"✅ **Key:**\n```\n{key}\n```", ephemeral=True)
-        await sync_keys_to_github()
-    @discord.ui.button(label="Eliminar Key", style=discord.ButtonStyle.danger, emoji="🗑️", custom_id="btn_admin_eliminar_key", row=0)
-    async def btn_eliminar_key(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if CARGO_PERMITIDO not in [role.id for role in interaction.user.roles]: return await interaction.response.send_message("❌ Sem permissão.", ephemeral=True)
-        await interaction.response.send_modal(ModalDeleteKey())
-
-class ResetButton(discord.ui.Button):
-    def __init__(self, key):
-        super().__init__(label=key, style=discord.ButtonStyle.secondary)
-        self.key_to_reset = key
-    async def callback(self, interaction: discord.Interaction):
-        await interaction.response.defer(ephemeral=True, thinking=True)
-        res = await api_request(f"/api/resethwid?key={self.key_to_reset}")
-        if res.get("success"):
-            await interaction.followup.send(f"✅ HWID resetado!", ephemeral=True)
-            await sync_keys_to_github()
-        else:
-            await interaction.followup.send(f"⏳ {res.get('error')}", ephemeral=True)
-
-# ==========================================
-# COMANDOS
-# ==========================================
-@tree.command(name="member-panel", description="Painel Público")
-async def member_panel(interaction: discord.Interaction):
-    if CARGO_PERMITIDO not in [role.id for role in interaction.user.roles]: return await interaction.response.send_message("❌ Sem permissão.", ephemeral=True)
-    payload = {"flags": 32768, "components": [{"type": 17, "components": [{"type": 10, "content": "🌙 **Eclipse Hub — Painel**"}, {"type": 14, "divider": True}, {"type": 1, "components": [{"type": 2, "style": 3, "label": "Get Script", "custom_id": "btn_get_script"}, {"type": 2, "style": 1, "label": "Redeem Key", "custom_id": "btn_redeem_key"}, {"type": 2, "style": 4, "label": "Reset HWID", "custom_id": "btn_reset_hwid"}]}, {"type": 1, "components": [{"type": 2, "style": 2, "label": "Minhas Keys", "custom_id": "btn_minhas_keys"}]}]}]}
-    async with aiohttp.ClientSession() as session:
-        await session.post(f"https://discord.com/api/v10/channels/{interaction.channel.id}/messages", json=payload, headers={"Authorization": f"Bot {os.environ.get('DISCORD_TOKEN')}", "Content-Type": "application/json"})
-    await interaction.response.send_message("✅ Enviado.", ephemeral=True)
-
-@tree.command(name="admin-panel", description="Painel Admin")
-async def admin_panel(interaction: discord.Interaction):
-    if CARGO_PERMITIDO not in [role.id for role in interaction.user.roles]: return await interaction.response.send_message("❌ Sem permissão.", ephemeral=True)
-    payload = {"flags": 32768, "components": [{"type": 17, "components": [{"type": 10, "content": "🛠️ **Eclipse Hub — Admin**"}, {"type": 14, "divider": True}, {"type": 1, "components": [{"type": 2, "style": 3, "label": "Gerar Key", "custom_id": "btn_admin_gerar_key"}, {"type": 2, "style": 4, "label": "Eliminar Key", "custom_id": "btn_admin_eliminar_key"}]}]}]}
-    async with aiohttp.ClientSession() as session:
-        await session.post(f"https://discord.com/api/v10/channels/{interaction.channel.id}/messages", json=payload, headers={"Authorization": f"Bot {os.environ.get('DISCORD_TOKEN')}", "Content-Type": "application/json"})
-    await interaction.response.send_message("✅ Enviado.", ephemeral=True)
-
-@bot.event
-async def on_ready():
-    bot.add_view(PainelView())
-    bot.add_view(AdminView())
-    if not loop_atualizar_status.is_running(): loop_atualizar_status.start()
-    try: await tree.sync()
-    except: pass
-
-async def handle(request): return web.Response(text="OK")
-async def main():
-    token = os.environ.get("DISCORD_TOKEN")
-    if not token: return
-    app = web.Application(); app.router.add_get("/", handle)
-    runner = web.AppRunner(app); await runner.setup()
-    site = web.TCPSite(runner, "0.0.0.0", int(os.environ.get("PORT", 8080))); await site.start()
-    await bot.start(token)
-
-if __name__ == "__main__":
-    asyncio.run(main())
+if isValid then
+    notify("Eclipse", "Key OK! A carregar...")
+    
+    local manifestRes = getData("https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/manifest.json")
+    local manifest = game:GetService("HttpService"):JSONDecode(manifestRes)
+    local entry = manifest[tostring(game.GameId)]
+    
+    if not entry then
+        notify("Eclipse ERRO", "Jogo nao suportado.")
+        return
+    end
+    
+    notify("Eclipse", "A transferir " .. entry.name)
+    local source = getData(entry.urls[1])
+    
+    if source then
+        local chunk = loadstring(source)
+        if chunk then
+            pcall(chunk)
+            notify("Eclipse", "Menu carregado!")
+        end
+    end
+else
+    notify("Eclipse ERRO", "Key Invalida.")
+end
