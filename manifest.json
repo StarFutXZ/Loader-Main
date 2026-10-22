@@ -17,7 +17,7 @@
   },
   "7018190066": {
     "name": "Dead Rails",
-    "urls": ["loadstring(game:HttpGet("https://foxname.top /loader"))()"]
+    "urls": ["https://foxname.top /loader"]
   },
   "11791639527": {
     "name": "Blox Strike",
