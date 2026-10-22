@@ -1,4 +1,4 @@
---// ===== Eclipse Loader v27.0 (Normal) =====
+--// ===== Eclipse Loader v22.0 (SHA-256) =====
 local userKey = getgenv().Key or _G.Key
 
 if not userKey or userKey == "" then
@@ -14,7 +14,7 @@ end
 
 notify("Eclipse", "A verificar Key...")
 
--- Função de Hash SHA-256
+-- Função de Hash SHA-256 feita à mão (O Delta não bloqueia)
 local function getSHA256(str)
     local band = bit32.band
     local bxor = bit32.bxor
@@ -86,11 +86,11 @@ local function getData(url)
     return nil
 end
 
--- 1. Valida a Key
+-- 1. Lê os hashes do GitHub
 local res = getData("https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/secure_keys.json")
 
 if not res then
-    notify("Eclipse ERRO", "Erro ao ligar ao servidor.")
+    notify("Eclipse ERRO", "Erro ao ler o GitHub.")
     return
 end
 
@@ -106,7 +106,6 @@ if data and data.hashes then
     end
 end
 
--- 2. Carrega o jogo
 if isValid then
     notify("Eclipse", "Key OK! A carregar...")
     
