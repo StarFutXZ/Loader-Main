@@ -1,4 +1,4 @@
---// ===== Eclipse Loader v23.0 (Ofuscado) =====
+--// ===== Eclipse Loader v24.0 (Corrigido) =====
 local userKey = getgenv().Key or _G.Key
 
 if not userKey or userKey == "" then
@@ -15,11 +15,12 @@ end
 notify("Eclipse", "A verificar Key...")
 
 -- ==========================================
--- 1. LINKS ESCONDIDOS
+-- 1. LINKS ESCONDIDOS (CORRIGIDOS)
 -- ==========================================
--- Lista de números que formam o link do "secure_keys.json"
+-- Link do secure_keys.json
 local _c1 = {104, 116, 116, 112, 115, 58, 47, 47, 114, 97, 119, 46, 103, 105, 116, 104, 117, 98, 117, 115, 101, 114, 99, 111, 110, 116, 101, 110, 116, 46, 99, 111, 109, 47, 83, 116, 97, 114, 70, 117, 116, 88, 90, 47, 76, 111, 97, 100, 101, 114, 45, 77, 97, 105, 110, 47, 114, 101, 102, 115, 47, 104, 101, 97, 100, 115, 47, 109, 97, 105, 110, 47, 115, 101, 99, 117, 114, 101, 95, 107, 101, 121, 115, 46, 106, 115, 111, 110}
--- Lista de números que formam o link do "manifest.json"
+
+-- Link do manifest.json (CORRIGIDO AQUI!)
 local _c2 = {104, 116, 116, 112, 115, 58, 47, 47, 114, 97, 119, 46, 103, 105, 116, 104, 117, 98, 117, 115, 101, 114, 99, 111, 110, 116, 101, 110, 116, 46, 99, 111, 109, 47, 83, 116, 97, 114, 70, 117, 116, 88, 90, 47, 76, 111, 97, 100, 101, 114, 45, 77, 97, 105, 110, 47, 114, 101, 102, 115, 47, 104, 101, 97, 100, 115, 47, 109, 97, 105, 110, 47, 109, 97, 110, 105, 102, 101, 115, 116, 46, 106, 115, 111, 110}
 
 local function decodeLink(bytes)
@@ -134,6 +135,12 @@ if isValid then
     notify("Eclipse", "Key OK! A carregar...")
     
     local manifestRes = getData(URL_MANIFEST)
+    
+    if not manifestRes then
+        notify("Eclipse ERRO", "Erro ao ler o Manifest.")
+        return
+    end
+
     local manifest = game:GetService("HttpService"):JSONDecode(manifestRes)
     local entry = manifest[tostring(game.GameId)]
     
