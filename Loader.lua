@@ -128,97 +128,38 @@ if data and data.hashes then
     end
 end
 
-
 -- ==========================================
 -- 4. CARREGA O JOGO
--- Suporte para GameId e PlaceId
 -- ==========================================
-
 if isValid then
     notify("Eclipse", "Key OK! A carregar...")
-
+    
+    -- Vai buscar o Manifest (agora com o link escondido)
     local manifestRes = getData(URL_MANIFEST)
-
+    
     if not manifestRes then
         notify("Eclipse ERRO", "Erro no Manifest.")
         return
     end
 
-    -- Decodificar manifest com tratamento de erros
-    local decodeOK, manifest = pcall(function()
-        return game:GetService("HttpService"):JSONDecode(manifestRes)
-    end)
-
-    if not decodeOK or type(manifest) ~= "table" then
-        notify("Eclipse ERRO", "Manifest JSON invalido.")
-        return
-    end
-
-    -- IDs da experiência e do place atual
-    local gameId = tostring(game.GameId)
-    local placeId = tostring(game.PlaceId)
-
-    -- 1. Tentar primeiro o PlaceId específico
-    local entry = manifest[placeId]
-    local matchedBy = "PlaceId"
-
-    -- 2. Se não existir, tentar o GameId
+    local manifest = game:GetService("HttpService"):JSONDecode(manifestRes)
+    local entry = manifest[tostring(game.GameId)]
+    
     if not entry then
-        entry = manifest[gameId]
-        matchedBy = "GameId"
-    end
-
-    -- 3. Verificar se o jogo está registado
-    if type(entry) ~= "table" then
-        notify(
-            "Eclipse ERRO",
-            "Jogo/Place nao suportado: " .. placeId
-        )
+        notify("Eclipse ERRO", "Jogo nao suportado.")
         return
     end
-
-    if type(entry.name) ~= "string"
-        or type(entry.urls) ~= "table"
-        or type(entry.urls[1]) ~= "string"
-        or entry.urls[1] == "" then
-
-        notify("Eclipse ERRO", "Entrada do manifest invalida.")
-        return
-    end
-
-    notify(
-        "Eclipse",
-        "Encontrado por " .. matchedBy .. ": " .. entry.name
-    )
-
-    -- 4. Obter o script configurado
+    
+    notify("Eclipse", "A transferir " .. entry.name)
     local source = getData(entry.urls[1])
-
-    if not source or source == "" then
-        notify("Eclipse ERRO", "Falha ao transferir o script.")
-        return
+    
+    if source then
+        local chunk = loadstring(source)
+        if chunk then
+            pcall(chunk)
+            notify("Eclipse", "Menu carregado!")
+        end
     end
-
-    -- 5. Compilar o código
-    local compileOK, chunk = pcall(function()
-        return loadstring(source)
-    end)
-
-    if not compileOK or type(chunk) ~= "function" then
-        notify("Eclipse ERRO", "Falha ao compilar o script.")
-        return
-    end
-
-    -- 6. Executar e verificar erros
-    local runOK, runError = pcall(chunk)
-
-    if not runOK then
-        warn("[Eclipse] Erro de execucao: " .. tostring(runError))
-        notify("Eclipse ERRO", "Falha ao executar o script.")
-        return
-    end
-
-    notify("Eclipse", "Menu carregado!")
 else
     notify("Eclipse ERRO", "Key Invalida.")
 end
