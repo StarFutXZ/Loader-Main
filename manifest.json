@@ -30,5 +30,9 @@
   "1686885941": {
     "name": "99 Nights in the Forest",
     "urls": ["https://raw.githubusercontent.com/StarFutXZ/Eclipse/refs/heads/main/99%20Nights%20in%20the%20Forest.lua"]
+  },
+  "2440500124": {
+    "name": "Doors",
+    "urls": ["https://raw.githubusercontent.com/StarFutXZ/Loader-Scripts/refs/heads/main/Doors.lua"]
   }
 }
