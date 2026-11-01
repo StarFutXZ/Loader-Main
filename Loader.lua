@@ -27,8 +27,40 @@ local function _d(data)
     end))
 end
 
--- Token: EclipseLoader2024 (Exatamente igual ao Cloudflare, SEM O !)
+-- Token: EclipseLoader2024 (SEM O !)
 local LOADER_TOKEN = _d("RWNsaXBzZUxvYWRlcjIwMjQ=")
+
+-- ==========================================
+-- SISTEMA DE HWID DO DISPOSITIVO
+-- ==========================================
+local function getDeviceHWID()
+    local hwid = nil
+
+    -- Tenta a função global padrão (Wave, AWP, etc)
+    if gethwid then
+        local ok, result = pcall(gethwid)
+        if ok and type(result) == "string" and #result > 0 then hwid = result end
+    end
+
+    -- Tenta Synapse X
+    if not hwid and syn and syn.get_hwid then
+        local ok, result = pcall(syn.get_hwid)
+        if ok and type(result) == "string" and #result > 0 then hwid = result end
+    end
+
+    -- Tenta Krnl
+    if not hwid and krnl_gethwid then
+        local ok, result = pcall(krnl_gethwid)
+        if ok and type(result) == "string" and #result > 0 then hwid = result end
+    end
+
+    -- Fallback final: usa o UserId (só se o executor não suportar HWID)
+    if not hwid then
+        hwid = "USER_" .. tostring(player.UserId)
+    end
+
+    return hwid
+end
 
 -- ==========================================
 -- 1. SISTEMA DE SEGURANÇA (KEY + HWID)
@@ -43,7 +75,9 @@ end
 userKey = string.gsub(userKey, "[%s\"']", "")
 notify("Eclipse", "A validar Key e Dispositivo...")
 
-local hwid = "USER_" .. tostring(player.UserId)
+local hwid = getDeviceHWID()
+print("[Eclipse Debug] O teu HWID é: ", hwid)
+
 local API_URL = "https://eclipse-proxy.andrepequeno31.workers.dev/api/validate?key=" .. HttpService:UrlEncode(userKey) .. "&hwid=" .. HttpService:UrlEncode(hwid) .. "&_t=" .. tostring(tick())
 
 local function getData(url)
@@ -85,14 +119,12 @@ end
 
 if string.find(rawJson, "ACESSO NEGADO") then
     notify("Eclipse ERRO", "Token inválido. Verifica o Cloudflare.")
-    print("[Eclipse Debug] Token errado. O Cloudflare diz: " .. rawJson)
     return
 end
 
 local parseSuccess, GameScripts = pcall(function() return HttpService:JSONDecode(rawJson) end)
 if not parseSuccess or type(GameScripts) ~= "table" then
     notify("Eclipse ERRO", "Erro no formato da lista de scripts.")
-    print("[Eclipse Debug] Resposta: " .. rawJson)
     return
 end
 
