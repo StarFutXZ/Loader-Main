@@ -1,0 +1,2849 @@
+local aa = {
+    [2] = table.move,
+    [25] = table.pack,
+    ds = function(K, aa, ab, ...)
+        local ac = K[25](...)
+
+        K[2](ac, 1, ac.n, ab + 1, aa)
+    end,
+}
+
+return (function(ab, ac, K, ad, ae)
+    return function(af)
+        return function(...)
+            local ag = {cache = {}}
+
+            ag.load = function(ah)
+                if not (ag.cache[ah]) then
+                    local aj, ak = ag.cache, {}
+
+                    ak.c, aj[ah] = ag[ah](), ak
+                end
+
+                return ag.cache[ah].c
+            end
+            ag.a = function()
+                local ah = getgenv()
+                local aj, ak = rawget(ah, '\0sh'), nil
+
+                if type(aj) ~= 'table' then
+                    aj = {
+                        fields = {},
+                        detours = {},
+                    }
+
+                    rawset(ah, '\0sh', aj)
+
+                    ak = aj
+                else
+                    ak = aj
+                end
+
+                local al, am, an, ao, ap = cloneref and cloneref(game:GetService'RunService') or game:GetService'RunService', hookfunction or replaceclosure, restorefunction or restorefunc, isreadonly, setreadonly
+
+                local function f(aq)
+                    if type(ap) ~= 'function' then
+                        return false
+                    elseif type(ao) ~= 'function' then
+                        return false
+                    end
+
+                    local ar, as = pcall(ao, aq)
+
+                    if ar then
+                        if not (as) then
+                            return false
+                        end
+                    else
+                        return false
+                    end
+
+                    return pcall(ap, aq, false)
+                end
+                local function F(aq, ar)
+                    if ar then
+                        pcall(ap, aq, true)
+                    end
+                end
+                local function t(aq, ar, as)
+                    local at, au = f(aq), pcall(function()
+                        aq[ar] = as
+                    end)
+
+                    F(aq, at)
+
+                    return au
+                end
+
+                local aq, ar, as, at, au, av = {}, {}, {}, {}, {}, true
+                local aw, ax, aA = {
+                    shared = ak,
+                    takeover = function()
+                        local aw = ak.unload
+
+                        ak.unload = nil
+
+                        if type(aw) == 'function' then
+                            pcall(aw)
+                        end
+                    end,
+                    publish = function(aw)
+                        ak.unload = aw
+                    end,
+                    adopt = function(aw)
+                        if aw then
+                            aq[#aq + 1] = aw
+                        end
+
+                        return aw
+                    end,
+                    connect = function(aw, ax)
+                        local ay = aw:Connect(ax)
+
+                        aq[#aq + 1] = ay
+
+                        return ay
+                    end,
+                    bind = function(aw, ax)
+                        local ay = '\0' .. tostring(math.random(10000000, 90000000))
+
+                        al:BindToRenderStep(ay, aw, ax)
+
+                        ar[#ar + 1] = ay
+
+                        return ay
+                    end,
+                    own = function(aw)
+                        as[#as + 1] = aw
+
+                        return aw
+                    end,
+                    spawn = function(aw, ...)
+                        local ax = task.spawn(aw, ...)
+
+                        at[#at + 1] = ax
+
+                        return ax
+                    end,
+                    teardown = function(aw)
+                        au[#au + 1] = aw
+
+                        return aw
+                    end,
+                    field = function(aw, ax, ay)
+                        local az, aA = ak.fields[aw]
+
+                        if az then
+                            aA = az
+                        else
+                            az = {}
+                            ak.fields[aw] = az
+                            aA = az
+                        end
+
+                        local aB, aC = aA[ax]
+
+                        if aB == nil then
+                            aB = aw[ax]
+
+                            if aB == nil then
+                                return nil
+                            end
+
+                            aA[ax] = aB
+                            aC = aB
+                        else
+                            aC = aB
+                        end
+
+                        local aD = ay(aC)
+
+                        if type(aD) ~= 'function' then
+                            return aC
+                        end
+                        if not (t(aw, ax, aD)) then
+                            aA[ax] = nil
+
+                            return aC
+                        end
+
+                        au[#au + 1] = function()
+                            if aw[ax] == aD then
+                                t(aw, ax, aC)
+                            end
+
+                            aA[ax] = nil
+                        end
+
+                        return aC
+                    end,
+                    detour = function(aw, ax)
+                        if type(am) ~= 'function' then
+                            return nil
+                        elseif type(aw) ~= 'function' then
+                            return nil
+                        end
+
+                        local ay = ak.detours[aw]
+
+                        if ay then
+                            return ay
+                        end
+
+                        local aA, aC = pcall(am, aw, ax)
+
+                        if aA then
+                            if type(aC) ~= 'function' then
+                                return nil
+                            end
+                        else
+                            return nil
+                        end
+
+                        ak.detours[aw] = aC
+                        au[#au + 1] = function()
+                            if type(an) ~= 'function' then
+                                pcall(am, aw, aC)
+                            elseif not (pcall(an, aw)) then
+                                pcall(am, aw, aC)
+                            end
+
+                            ak.detours[aw] = nil
+                        end
+
+                        return aC
+                    end,
+                }, getupvalues or debug and debug.getupvalues, setupvalue or debug and debug.setupvalue
+
+                aw.upvalue = function(aC, aD, aE)
+                    if type(ax) ~= 'function' then
+                        return false
+                    elseif type(aA) ~= 'function' then
+                        return false
+                    end
+
+                    local aF, aG = pcall(ax, aC)
+
+                    if aF then
+                        if type(aG) ~= 'table' then
+                            return false
+                        end
+                    else
+                        return false
+                    end
+
+                    local aH = aG[aD]
+
+                    if not (pcall(aA, aC, aD, aE)) then
+                        return false
+                    end
+
+                    au[#au + 1] = function()
+                        local aI, aJ = pcall(ax, aC)
+
+                        if aI then
+                            if type(aJ) == 'table' then
+                                if aJ[aD] == aE then
+                                    pcall(aA, aC, aD, aH)
+                                end
+                            end
+                        end
+                    end
+
+                    return true
+                end
+                aw.alive = function()
+                    local aC = av
+
+                    return aC
+                end
+                aw.release = function()
+                    if not (av) then
+                        return
+                    end
+
+                    av = false
+
+                    for aC = #au, 1, -1 do
+                        pcall(au[aC])
+
+                        au[aC] = nil
+                    end
+                    for aC = #ar, 1, -1 do
+                        pcall(al.UnbindFromRenderStep, al, ar[aC])
+
+                        ar[aC] = nil
+                    end
+                    for aC = #aq, 1, -1 do
+                        local aD = aq[aC]
+
+                        aq[aC] = nil
+
+                        if typeof(aD) == 'RBXScriptConnection' then
+                            pcall(aD.Disconnect, aD)
+                        elseif type(aD) == 'function' then
+                            pcall(aD)
+                        elseif type(aD) == 'table' then
+                            if type(aD.Disconnect) == 'function' then
+                                pcall(aD.Disconnect, aD)
+                            end
+                        end
+                    end
+                    for aC = #at, 1, -1 do
+                        pcall(task.cancel, at[aC])
+
+                        at[aC] = nil
+                    end
+                    for aC = #as, 1, -1 do
+                        local aD = as[aC]
+
+                        as[aC] = nil
+
+                        pcall(aD.Destroy, aD)
+                    end
+
+                    ak.unload = nil
+                end
+
+                return aw
+            end
+            ag.b = function()
+                local ak, al, an = cloneref or function(ak)
+                    return ak
+                end, getgenv(), {}
+
+                an.players = game:GetService'Players'
+                an.run = ak(game:GetService'RunService')
+                an.input = ak(game:GetService'UserInputService')
+                an.storage = ak(game:GetService'ReplicatedStorage')
+                an.lighting = ak(game:GetService'Lighting')
+                an.workspace = ak(game:GetService'Workspace')
+                an.collection = ak(game:GetService'CollectionService')
+                an.guiservice = ak(game:GetService'GuiService')
+                an.http = ak(game:GetService'HttpService')
+                an.stats = ak(game:GetService'Stats')
+                an.tween = ak(game:GetService'TweenService')
+                an.sounds = ak(game:GetService'SoundService')
+                an.content = ak(game:GetService'ContentProvider')
+                an.assets = ak(game:GetService'AssetService')
+                an.debris = ak(game:GetService'Debris')
+                an.keyframes = ak(game:GetService'KeyframeSequenceProvider')
+                an.lp = an.players.LocalPlayer
+                an.hook = hookfunction or replaceclosure
+                an.newc = newcclosure or function(aq)
+                    return aq
+                end
+                an.getups = getupvalues or debug and debug.getupvalues
+                an.setup = setupvalue or debug and debug.setupvalue
+                an.info = debug and (debug.info or debug.getinfo)
+                an.custom_asset = getcustomasset
+
+                local aq, ar = getthreadidentity or getidentity, setthreadidentity or setidentity
+
+                an.identity = (function()
+                    if type(aq) ~= 'function' then
+                        return nil
+                    end
+
+                    local as, at = pcall(aq)
+
+                    if as then
+                        if type(at) == 'number' then
+                            return at
+                        end
+                    end
+
+                    return nil
+                end)()
+                an.reclaim = function()
+                    if type(ar) == 'function' then
+                        if an.identity then
+                            pcall(ar, an.identity)
+                        end
+                    end
+                end
+                an.elevate = function(as, at, au, av, aw)
+                    if type(ar) ~= 'function' then
+                        return pcall(as, at, au, av, aw)
+                    end
+
+                    local ax
+
+                    if type(aq) == 'function' then
+                        local aA, aC = pcall(aq)
+
+                        ax = (aA and {
+                            (type(aC) == 'number' and {aC} or {ax})[1],
+                        } or {ax})[1]
+                    end
+
+                    pcall(ar, an.identity or 8)
+
+                    local aA, aC = pcall(as, at, au, av, aw)
+
+                    if ax then
+                        pcall(ar, ax)
+                    end
+
+                    return aA, aC
+                end
+                an.plain = function(as, ...)
+                    if type(ar) ~= 'function' then
+                        return pcall(as, ...)
+                    end
+
+                    local at = an.identity
+
+                    if type(aq) == 'function' then
+                        local au, av = pcall(aq)
+
+                        at = (au and {
+                            (type(av) == 'number' and {av} or {at})[1],
+                        } or {at})[1]
+                    end
+
+                    pcall(ar, 2)
+
+                    local au = table.pack(pcall(as, ...))
+
+                    if at then
+                        pcall(ar, at)
+                    end
+
+                    return table.unpack(au, 1, au.n)
+                end
+                an.host = (function()
+                    if type(gethui) == 'function' then
+                        local as, at = pcall(gethui)
+
+                        if as then
+                            if typeof(at) == 'Instance' then
+                                return ak(at)
+                            end
+                        end
+                    end
+
+                    local as, at = pcall(game.GetService, game, 'CoreGui')
+
+                    if as then
+                        if typeof(at) == 'Instance' then
+                            return ak(at)
+                        end
+                    end
+
+                    return an.lp:FindFirstChildOfClass'PlayerGui'
+                end)()
+                an.screen = function(as)
+                    local at = Instance.new'ScreenGui'
+
+                    at.IgnoreGuiInset = true
+                    at.ResetOnSpawn = false
+                    at.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+                    at.DisplayOrder = as or 0
+                    as = pcall(function()
+                        at.Parent = an.host
+                    end)
+
+                    if as then
+                    else
+                        local au = an.lp:FindFirstChildOfClass'PlayerGui'
+
+                        as = au ~= nil and pcall(function()
+                            at.Parent = au
+                        end)
+                    end
+                    if as then
+                        if not (at.Parent) then
+                            at:Destroy()
+
+                            return nil
+                        end
+                    else
+                        at:Destroy()
+
+                        return nil
+                    end
+
+                    return at
+                end
+                an.weak = function()
+                    return setmetatable({}, {
+                        __mode = 'k',
+                    })
+                end
+                an.module = function(as, ...)
+                    local at = as or an.storage
+
+                    for au = 1, select('#', ...), 1 do
+                        at = at:FindFirstChild((select(au, ...)))
+
+                        if not (at) then
+                            return nil
+                        end
+                    end
+
+                    if not (at:IsA'ModuleScript') then
+                        return nil
+                    end
+
+                    local au, av = pcall(require, at)
+
+                    if au then
+                        return av
+                    end
+
+                    return nil
+                end
+                an.drawmask = function()
+                    local as = rawget(al, 'shitaro_drawmask')
+
+                    if type(as) == 'table' then
+                        return as
+                    end
+
+                    return nil
+                end
+
+                return an
+            end
+            ag.c = function()
+                local ak, al, an, aq, ar, as, at, au, av, aw, ax, aA, aC, aD, aE, aG = bit32.band, bit32.bxor, bit32.bnot, bit32.rrotate, bit32.rshift, string.char, string.byte, string.rep, string.sub, string.gsub, string.format, table.concat, table.create, math.floor, request or syn and syn.request or http and http.request or fluxus and fluxus.request or http_request, {
+                    1116352408,
+                    1899447441,
+                    3049323471,
+                    3921009573,
+                    961987163,
+                    1508970993,
+                    2453635748,
+                    2870763221,
+                    3624381080,
+                    310598401,
+                    607225278,
+                    1426881987,
+                    1925078388,
+                    2162078206,
+                    2614888103,
+                    3248222580,
+                    3835390401,
+                    4022224774,
+                    264347078,
+                    604807628,
+                    770255983,
+                    1249150122,
+                    1555081692,
+                    1996064986,
+                    2554220882,
+                    2821834349,
+                    2952996808,
+                    3210313671,
+                    3336571891,
+                    3584528711,
+                    113926993,
+                    338241895,
+                    666307205,
+                    773529912,
+                    1294757372,
+                    1396182291,
+                    1695183700,
+                    1986661051,
+                    2177026350,
+                    2456956037,
+                    2730485921,
+                    2820302411,
+                    3259730800,
+                    3345764771,
+                    3516065817,
+                    3600352804,
+                    4094571909,
+                    275423344,
+                    430227734,
+                    506948616,
+                    659060556,
+                    883997877,
+                    958139571,
+                    1322822218,
+                    1537002063,
+                    1747873779,
+                    1955562222,
+                    2024104815,
+                    2227730452,
+                    2361852424,
+                    2428436474,
+                    2756734187,
+                    3204031479,
+                    3329325298,
+                }
+                local aH = aC(64, 0)
+
+                local function a(aI)
+                    return as(aD(aI / 16777216) % 256, aD(aI / 65536) % 256, aD(aI / 256) % 256, aI % 256)
+                end
+                local function m(aI)
+                    local aJ = #aI
+                    local aK, aL = aJ * 8 % 4294967296, aD(aJ * 8 / 4294967296)
+
+                    aI = aI .. '\128' .. au('\0', (56 - (aJ + 1) % 64) % 64) .. a(aL) .. a(aK)
+
+                    local aM, aN, aO, aP, aR, aS, aT, aU = 1779033703, 3144134277, 1013904242, 2773480762, 1359893119, 2600822924, 528734635, 1541459225
+
+                    for aV = 1, #aI, 64 do
+                        for aW = 0, 15, 1 do
+                            aK = aV + aW * 4
+                            aH[aW + 1] = at(aI, aK) * 16777216 + at(aI, aK + 1) * 65536 + at(aI, aK + 2) * 256 + at(aI, aK + 3)
+                        end
+                        for aW = 17, 64, 1 do
+                            aJ, aL = aH[aW - 15], aH[aW - 2]
+
+                            local aX, aY = al(aq(aJ, 7), aq(aJ, 18), ar(aJ, 3)), al(aq(aL, 17), aq(aL, 19), ar(aL, 10))
+
+                            aH[aW] = (aH[aW - 16] + aX + aH[aW - 7] + aY) % 4294967296
+                        end
+
+                        local aW, aX, aY, aZ, a_, a0, a1, a2 = aR, aS, aT, aU, aM, aN, aO, aP
+
+                        for a3 = 1, 64, 1 do
+                            local a4, a5 = al(aq(aW, 6), aq(aW, 11), aq(aW, 25)), al(ak(aW, aX), ak(an(aW), aY))
+                            local a6, a7 = (aZ + a4 + a5 + aG[a3] + aH[a3]) % 4294967296, (al(aq(a_, 2), aq(a_, 13), aq(a_, 22)) + al(ak(a_, a0), ak(a_, a1), ak(a0, a1))) % 4294967296
+
+                            aW, aZ, a_, a2, aX, aY, a0, a1 = (a2 + a6) % 4294967296, aY, (a6 + a7) % 4294967296, a1, aW, aX, a_, a0
+                        end
+
+                        aM, aN, aO, aP, aR, aS, aT, aU = (aM + a_) % 4294967296, (aN + a0) % 4294967296, (aO + a1) % 4294967296, (aP + a2) % 4294967296, (aR + aW) % 4294967296, (aS + aX) % 4294967296, (aT + aY) % 4294967296, (aU + aZ) % 4294967296
+                    end
+
+                    return a(aM) .. a(aN) .. a(aO) .. a(aP) .. a(aR) .. a(aS) .. a(aT) .. a(aU)
+                end
+
+                local aI, aJ = aC(64, ''), aC(64, '')
+
+                local function h(aK, aL)
+                    aK = (#aK > 64 and {
+                        (m(aK)),
+                    } or {aK})[1]
+                    aK = (#aK < 64 and {
+                        (aK .. au('\0', 64 - #aK)),
+                    } or {aK})[1]
+
+                    for aM = 1, 64, 1 do
+                        local aN = at(aK, aM)
+
+                        aI[aM] = as(al(aN, 92))
+                        aJ[aM] = as(al(aN, 54))
+                    end
+
+                    return m(aA(aI) .. m(aA(aJ) .. aL))
+                end
+
+                local aK = {}
+
+                for aL = 1, 64, 1 do
+                    aK[av('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/', aL, aL)] = aL - 1
+                end
+
+                local function N(aL)
+                    local aM, aN = {}, 0
+
+                    for aO = 1, #aL, 3 do
+                        local aP, aR, aS = at(aL, aO), at(aL, aO + 1), at(aL, aO + 2)
+
+                        aO = aP * 65536 + (aR or 0) * 256 + (aS or 0)
+
+                        local aT, aU = aD(aO / 262144) + 1, aD(aO / 4096) % 64 + 1
+
+                        aN = aN + 1
+                        aM[aN] = av('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_', aT, aT)
+                        aN = aN + 1
+                        aM[aN] = av('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_', aU, aU)
+
+                        if aR then
+                            aU = aD(aO / 64) % 64 + 1
+                            aN = aN + 1
+                            aM[aN] = av('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_', aU, aU)
+                        end
+                        if aS then
+                            aP = aO % 64 + 1
+                            aN = aN + 1
+                            aM[aN] = av('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_', aP, aP)
+                        end
+                    end
+
+                    return aA(aM)
+                end
+                local function F(aL)
+                    aL = aw(aw(aw(aL, '-', '+'), '_', '/'), '[^A-Za-z0-9+/=]', '')
+                    aL = aL .. au('=', (4 - #aL % 4) % 4)
+
+                    local aM, aN = {}, 0
+
+                    for aO = 1, #aL, 4 do
+                        local aP, aR = av(aL, aO + 2, aO + 2), av(aL, aO + 3, aO + 3)
+                        local aS = (aK[av(aL, aO, aO)] or 0) * 262144 + (aK[av(aL, aO + 1, aO + 1)] or 0) * 4096 + (aK[aP] or 0) * 64 + (aK[aR] or 0)
+
+                        aN = aN + 1
+                        aM[aN] = as(aD(aS / 65536) % 256)
+
+                        if aP ~= '=' then
+                            aN = aN + 1
+                            aM[aN] = as(aD(aS / 256) % 256)
+                        end
+                        if aR ~= '=' then
+                            aN = aN + 1
+                            aM[aN] = as(aS % 256)
+                        end
+                    end
+
+                    return aA(aM)
+                end
+
+                local aL, aM = aw('02d417c2bd7b033a00d3c4e9fda43fc56761f68f516cf68a68a6110f2cb99e49', '..', function(
+                    aL
+                )
+                    return as(tonumber(aL, 16))
+                end), Random.new(os.time() + aD(os.clock() * 1000000) % 2147483647)
+
+                local function g()
+                    local aN = aC(16)
+
+                    for aO = 1, 16, 1 do
+                        aN[aO] = as(aM:NextInteger(0, 255))
+                    end
+
+                    return aA(aN)
+                end
+                local function l(aN)
+                    local aO = aC(8)
+
+                    for aP = 8, 1, -1 do
+                        aO[aP] = as(aN % 256)
+                        aN = aD(aN / 256)
+                    end
+
+                    return aA(aO)
+                end
+                local function z(aN)
+                    return (aw(aN, '[^%w%-%._~/]', function(aO)
+                        return ax('%%%02X', at(aO))
+                    end))
+                end
+
+                local aN, aO, aP = bit32.lshift, bit32.rshift, bit32.band
+
+                local function a(aR)
+                    local function n(aS)
+                        local aT, aU, aV, aW = at(aR, aS, aS + 3)
+
+                        return aW * 16777216 + aV * 65536 + aU * 256 + aT
+                    end
+
+                    local aS, aT, aU, aV, aW, aX, aY, aZ = n(1), n(5), n(9), n(13), nil, nil, nil, nil
+
+                    if aS == 0 and aT == 0 and aU == 0 and aV == 0 then
+                        aS, aT, aU, aV = 2654435769, 608135816, 3084996962, 2246822507
+                        aW, aX, aY, aZ = aS, aT, aU, aV
+                    else
+                        aW, aX, aY, aZ = aS, aT, aU, aV
+                    end
+
+                    local function c()
+                        local a_ = al(aW, aN(aW, 11))
+
+                        a_, aW, aX, aY = al(a_, aO(a_, 8)), aX, aY, aZ
+
+                        local a0 = al(al(aZ, aO(aZ, 19)), a_)
+
+                        aZ = a0
+
+                        return a0
+                    end
+
+                    return c
+                end
+                local function q(aR, aT)
+                    local aU, aV = a(h(aL, 'SHITARO-ASSET-MASK-v1\0' .. aT)), #aR
+
+                    if buffer and buffer.fromstring then
+                        local aW, aX = buffer.fromstring(aR), 0
+
+                        while aX + 4 <= aV do
+                            buffer.writeu32(aW, aX, al(buffer.readu32(aW, aX), aU()))
+
+                            aX = aX + 4
+                        end
+
+                        if aX < aV then
+                            local aY, aZ = aU(), 0
+
+                            while aX + aZ < aV do
+                                buffer.writeu8(aW, aX + aZ, al(buffer.readu8(aW, aX + aZ), aP(aO(aY, aZ * 8), 255)))
+
+                                aZ = aZ + 1
+                            end
+                        end
+
+                        return buffer.tostring(aW)
+                    end
+
+                    local aW, aX, aY = {}, 1, 0
+
+                    while aX <= aV do
+                        aT = aU()
+
+                        for aZ = 0, 3, 1 do
+                            if aX + aZ <= aV then
+                                aY = aY + 1
+                                aW[aY] = as(al(at(aR, aX + aZ), aP(aO(aT, aZ * 8), 255)))
+                            end
+                        end
+
+                        aX = aX + 4
+                    end
+
+                    return aA(aW)
+                end
+                local function _(aR, aT, aU, aV)
+                    if not (aE) then
+                        return nil
+                    end
+
+                    local aW, aX = g(), l(os.time())
+                    local aY = {
+                        ['X-Shitaro-Token'] = N(aW .. aX .. h(aL, 'SHITARO-' .. aT .. '-REQ-v1\0' .. aU .. '\0' .. aW .. '\0' .. aX)),
+                        Accept = '*/*',
+                        ['Cache-Control'] = 'no-cache',
+                    }
+
+                    if aV then
+                        aY['Content-Type'] = 'application/json'
+                    end
+
+                    local aZ, a_ = pcall(aE, {
+                        Url = aR,
+                        Method = aV and 'POST' or 'GET',
+                        Headers = aY,
+                        Body = aV,
+                    })
+
+                    if aZ then
+                        if type(a_) ~= 'table' then
+                            return nil
+                        end
+                    else
+                        return nil
+                    end
+                    if a_.StatusCode ~= 200 then
+                        return nil, nil, a_.StatusCode
+                    end
+
+                    aV = a_.Body
+
+                    if type(aV) ~= 'string' then
+                        return nil
+                    elseif #aV == 0 then
+                        return nil
+                    end
+
+                    aZ = a_.Headers or {}
+                    aR = aZ['X-Shitaro-Sig'] or aZ['x-shitaro-sig']
+
+                    if aR then
+                        if aR == '' then
+                            return nil
+                        end
+                    else
+                        return nil
+                    end
+
+                    aZ = h(aL, 'SHITARO-' .. aT .. '-RESP-v1\0' .. aU .. '\0' .. aW .. '\0' .. l(#aV) .. aV)
+
+                    if F(aR) ~= aZ then
+                        return nil
+                    end
+
+                    return aV, aW
+                end
+                local function R(aR)
+                    return (aw(aR, '.', function(aT)
+                        return ax('%02x', at(aT))
+                    end))
+                end
+
+                return {
+                    library = function(aR)
+                        for aT = 1, 3, 1 do
+                            aT = _('https://shitaro.lol/api/library/' .. z(aR), 'LIB', aR)
+
+                            if type(aT) == 'string' then
+                                if #aT > 0 then
+                                    return aT
+                                end
+                            end
+
+                            task.wait(0.5)
+                        end
+
+                        return nil
+                    end,
+                    asset = function(aR)
+                        local aT, aU = _('https://shitaro.lol/api/assets/' .. z(aR), 'ASSET', aR)
+
+                        if type(aT) ~= 'string' then
+                            return nil
+                        elseif #aT == 0 then
+                            return nil
+                        end
+
+                        return q(aT, aU)
+                    end,
+                    share_put = function(aR)
+                        local aT, aU, aV = _('https://shitaro.lol/api/share', 'CFGPUT', R(m(aR)), aR)
+
+                        if type(aT) ~= 'string' then
+                            return nil, aV
+                        end
+
+                        aV = string.match(aT, '"code"%s*:%s*"([%w%-]+)"')
+
+                        if not aV then
+                            return nil, 0
+                        end
+
+                        return aV
+                    end,
+                    share_get = function(aR)
+                        aR = string.upper(aw(aR, '[^%w%-]', ''))
+
+                        if #aR < 4 then
+                            return nil, 404
+                        elseif #aR > 16 then
+                            return nil, 404
+                        end
+
+                        local aT, aV, aW = _('https://shitaro.lol/api/share/' .. aR, 'CFGGET', aR)
+
+                        if type(aT) ~= 'string' then
+                            return nil, aW
+                        end
+
+                        return aT
+                    end,
+                }
+            end
+            ag.d = function()
+                local function R(as)
+                    return cloneref(game:GetService(as))
+                end
+
+                local as, at, aw, ax, aA, aE, aO, aP, aR = R'Players', R'RunService', R'UserInputService', R'TweenService', R'HttpService', R'GuiService', R'ReplicatedStorage', R'Lighting', R'Stats'
+                local aT, aW, aY, aZ, a_, a0, a1, a2, a3 = as.LocalPlayer, at, aw, ax, aA, aE, aO, aP, aR
+                local a4, a5, a6, a7, a8, a9, ba, bb, bc, bd, be, bf, bg, bh, bi, bj, bk, bl, bm, bn, bo, bp, bq, br, bs, bt, bu, bv, bw, bx, by, bz, bA, bB, bC, bD, bE, bF, bG, bH, bI, bJ, bK, bL, bM, bN, bO, bP, bR, bS, bT, bU, bV = aT, Color3.fromRGB, Color3.fromHSV, Color3.new, UDim2.new, UDim2.fromOffset, UDim2.fromScale, UDim.new, Vector2.new, ColorSequence.new, ColorSequenceKeypoint.new, NumberSequence.new, NumberSequenceKeypoint.new, math.clamp, math.floor, math.max, math.min, math.abs, string.format, string.sub, string.upper, string.lower, string.gsub, string.match, string.find, table.find, table.remove, table.clear, table.concat, table.sort, table.clone, task.spawn, task.delay, task.defer, Enum.TextXAlignment, Enum.AutomaticSize.X, Enum.AutomaticSize.Y, Enum.AutomaticSize.XY, Enum.AutomaticSize.None, Enum.HorizontalAlignment, Enum.VerticalAlignment, Enum.TextTruncate.AtEnd, Enum.UserInputType.MouseButton1, Enum.UserInputType.MouseButton2, Enum.UserInputType.MouseButton3, Enum.UserInputType.MouseMovement, Enum.UserInputType.Touch, Enum.UserInputState.End, Enum.KeyCode.Unknown, Enum.PlaybackState.Completed, Enum.EasingStyle.Quint, Enum.EasingStyle.Quad, Enum.EasingStyle.Sine
+                local bW, bX, bY, bZ, b_, b0 = a7(1, 1, 1), a7(0, 0, 0), getgenv(), base64encode, base64decode, {}
+
+                b0.__index = b0
+                b0.new = function()
+                    return setmetatable({}, b0)
+                end
+                b0.add = function(b1, b2)
+                    b1[#b1 + 1] = b2
+
+                    return b2
+                end
+                b0.clean = function(b1)
+                    for b2 = #b1, 1, -1 do
+                        local b3 = b1[b2]
+
+                        b1[b2] = nil
+                        b2 = typeof(b3)
+
+                        if b2 == 'RBXScriptConnection' then
+                            b3:Disconnect()
+                        elseif b2 == 'Instance' then
+                            b3:Destroy()
+                        elseif b2 == 'function' then
+                            pcall(b3)
+                        elseif b2 == 'thread' then
+                            pcall(task.cancel, b3)
+                        elseif b2 == 'table' then
+                            if type(b3.destroy) == 'function' then
+                                b3:destroy()
+                            elseif type(b3.clean) == 'function' then
+                                b3:clean()
+                            end
+                        end
+                    end
+                end
+
+                local function GQ(b1, b2, b3)
+                    local b4 = b1:Connect(b2)
+
+                    if b3 then
+                        b3[#b3 + 1] = b4
+                    end
+
+                    return b4
+                end
+                local function aQ(b1)
+                    local b2, b3 = pcall(a_.JSONEncode, a_, b1)
+
+                    return b2 and b3 or nil
+                end
+                local function mQ(b1)
+                    if type(b1) ~= 'string' then
+                        return nil
+                    elseif b1 == '' then
+                        return nil
+                    end
+
+                    local b2, b3 = pcall(a_.JSONDecode, a_, b1)
+
+                    if b2 then
+                        if type(b3) == 'table' then
+                            return b3
+                        end
+                    end
+
+                    return nil
+                end
+
+                local b1 = {
+                    dir = function(b1)
+                        local b2, b3 = pcall(isfolder, b1)
+
+                        if b2 then
+                            if not (b3) then
+                                pcall(makefolder, b1)
+                            end
+                        end
+                    end,
+                    has = function(b1)
+                        local b2, b3 = pcall(isfile, b1)
+
+                        return b2 and b3 == true
+                    end,
+                }
+
+                b1.read = function(b2)
+                    if b1.has(b2) then
+                        local b3, b4 = pcall(readfile, b2)
+
+                        if b3 then
+                            return b4
+                        end
+                    end
+
+                    return nil
+                end
+                b1.write = function(b2, b3)
+                    return (pcall(writefile, b2, b3))
+                end
+                b1.del = function(b2)
+                    if b1.has(b2) then
+                        pcall(delfile, b2)
+                    end
+                end
+                b1.list = function(b2)
+                    local b3, b4 = pcall(isfolder, b2)
+
+                    if b3 then
+                        if b4 then
+                            local b5, b6 = pcall(listfiles, b2)
+
+                            if b5 then
+                                if type(b6) == 'table' then
+                                    return b6
+                                end
+                            end
+                        end
+                    end
+
+                    return {}
+                end
+
+                local b2, b3
+
+                do
+                    local function jQ(b4)
+                        local b5, b6 = pcall(request, {
+                            Url = b4,
+                            Method = 'GET',
+                        })
+
+                        if b5 then
+                            if type(b6) == 'table' then
+                                if b6.StatusCode == 200 then
+                                    if type(b6.Body) == 'string' then
+                                        return b6.Body
+                                    end
+                                end
+                            end
+                        end
+
+                        return nil
+                    end
+
+                    b2 = function(b4)
+                        local b5, b6 = pcall(getcustomasset, b4)
+
+                        if b5 then
+                            if type(b6) == 'string' then
+                                return b6
+                            end
+                        end
+
+                        return nil
+                    end
+
+                    local function EQ(b4, b5, b6)
+                        if not (b1.has(b4)) then
+                            local b7 = jQ(b5)
+
+                            if b7 then
+                                if #b7 < (b6 or 1) then
+                                    return nil
+                                elseif not (b1.write(b4, b7)) then
+                                    return nil
+                                end
+                            else
+                                return nil
+                            end
+                        end
+
+                        return b2(b4)
+                    end
+
+                    b3 = EQ
+                end
+
+                local b4, b5 = {}
+
+                do
+                    local b6, b7, b8, b9, ca, cb, cc, cd, ce, cf, cg, ch = bit32.band, bit32.bxor, bit32.rshift, buffer.create, buffer.writeu8, buffer.readu8, buffer.copy, buffer.tostring, math.exp, math.sqrt, string.byte, {}
+
+                    for cj = 0, 255, 1 do
+                        R = cj
+
+                        for ck = 1, 8, 1 do
+                            R = (b6(R, 1) == 1 and {
+                                (b7(3988292384, b8(R, 1))),
+                            } or {
+                                (b8(R, 1)),
+                            })[1]
+                        end
+
+                        ch[cj] = R
+                    end
+
+                    local function yQ(cj, ck, cl)
+                        local cm = 4294967295
+
+                        for cn = ck, ck + cl - 1, 1 do
+                            cm = b7(ch[b6(b7(cm, cb(cj, cn)), 255)], b8(cm, 8))
+                        end
+
+                        return b7(cm, 4294967295)
+                    end
+                    local function JQ(cj, ck, cl)
+                        ca(cj, ck, b6(b8(cl, 24), 255))
+                        ca(cj, ck + 1, b6(b8(cl, 16), 255))
+                        ca(cj, ck + 2, b6(b8(cl, 8), 255))
+                        ca(cj, ck + 3, b6(cl, 255))
+                    end
+
+                    local cj = {
+                        137,
+                        80,
+                        78,
+                        71,
+                        13,
+                        10,
+                        26,
+                        10,
+                    }
+
+                    local function MQ(ck, cl, cm)
+                        local cn = ck * 4 + 1
+                        local co = cn * cl
+                        local cp = b9(co)
+
+                        for cq = 0, cl - 1, 1 do
+                            local cr = cq * cn
+
+                            ca(cp, cr, 0)
+
+                            for cs = 0, ck - 1, 1 do
+                                local ct, cu, cv, cw = cm(cs, cq)
+                                local cx = cr + 1 + cs * 4
+
+                                ca(cp, cx, ct)
+                                ca(cp, cx + 1, cu)
+                                ca(cp, cx + 2, cv)
+                                ca(cp, cx + 3, cw)
+                            end
+                        end
+
+                        local cq = math.ceil(co / 65535)
+
+                        cm = 2 + co + cq * 5 + 4
+
+                        local cr = b9(45 + cm + 12)
+
+                        for cs = 1, 8, 1 do
+                            ca(cr, cs - 1, cj[cs])
+                        end
+
+                        local cs = 8
+
+                        local function eQ(ct, cu, cv)
+                            JQ(cr, cs, cu)
+
+                            for cw = 1, 4, 1 do
+                                ca(cr, cs + 3 + cw, cg(ct, cw))
+                            end
+
+                            cv(cs + 8)
+                            JQ(cr, cs + 8 + cu, yQ(cr, cs + 4, cu + 4))
+
+                            ct = cs
+                            cs = ct + (12 + cu)
+                        end
+
+                        eQ('IHDR', 13, function(ct)
+                            JQ(cr, ct, ck)
+                            JQ(cr, ct + 4, cl)
+                            ca(cr, ct + 8, 8)
+                            ca(cr, ct + 9, 6)
+                            ca(cr, ct + 10, 0)
+                            ca(cr, ct + 11, 0)
+                            ca(cr, ct + 12, 0)
+                        end)
+                        eQ('IDAT', cm, function(ct)
+                            ca(cr, ct, 120)
+                            ca(cr, ct + 1, 1)
+
+                            local cu, cv, cw = ct + 2, 1, 0
+
+                            for cx = 0, cq - 1, 1 do
+                                ct = cx * 65535
+
+                                local cy = bk(65535, co - ct)
+                                local cz = b7(cy, 65535)
+
+                                ca(cr, cu, cx == cq - 1 and 1 or 0)
+                                ca(cr, cu + 1, b6(cy, 255))
+                                ca(cr, cu + 2, b8(cy, 8))
+                                ca(cr, cu + 3, b6(cz, 255))
+                                ca(cr, cu + 4, b8(cz, 8))
+                                cc(cr, cu + 5, cp, ct, cy)
+
+                                for cA = ct, ct + cy - 1, 1 do
+                                    cv = (cv + cb(cp, cA)) % 65521
+                                    cw = (cw + cv) % 65521
+                                end
+
+                                cu = cu + (5 + cy)
+                            end
+
+                            JQ(cr, cu, cw * 65536 + cv)
+                        end)
+                        eQ('IEND', 0, function() end)
+
+                        return cd(cr)
+                    end
+                    local function PQ(ck, cl, cm, co, cp)
+                        local cq, cr = bl(ck) - cm + cp, bl(cl) - co + cp
+
+                        ck, co = bj(cq, 0), bj(cr, 0)
+
+                        return cf(ck * ck + co * co) + bk(bj(cq, cr), 0) - cp
+                    end
+                    local function TQ(ck, cl, cm, co, cp, cq, cr)
+                        return {
+                            w = ck,
+                            h = cl,
+                            v = 2,
+                            px = function(cs, ct)
+                                local cu = PQ(cs + 0.5 - ck / 2, ct + 0.5 - cl / 2, cm, co, cp)
+
+                                if cu <= -1.25 then
+                                    return 0, 0, 0, 0
+                                elseif cu >= cq then
+                                    return 0, 0, 0, 0
+                                end
+
+                                cs, ct = 1 - bj(cu, 0) / cq, cu < 0 and (cu + 1.25) / 1.25 or 1
+
+                                return 0, 0, 0, bi(255 * cr * cs * cs * ct + 0.5)
+                            end,
+                        }
+                    end
+
+                    local ck = {}
+
+                    ck.pshadow = TQ(63, 61, 17.5, 16.5, 16.5, 14, 0.42)
+                    ck.bshadow = TQ(52, 52, 12, 12, 10, 14, 0.42)
+                    ck.shadow = {
+                        w = 96,
+                        h = 96,
+                        px = function(cl, cm)
+                            local co = PQ(cl + 0.5 - 48, cm + 0.5 - 48, 20, 20, 12)
+
+                            if co <= 0 then
+                                return 0, 0, 0, 0
+                            end
+
+                            return 0, 0, 0, bi(127.5 * ce(-3.4 * co / 28) + 0.5)
+                        end,
+                    }
+                    ck.checker = {
+                        w = 2,
+                        h = 2,
+                        px = function(cl, cm)
+                            local co = (cl + cm) % 2 == 0 and 206 or 146
+
+                            return co, co, co, 255
+                        end,
+                    }
+
+                    local function PQ(cl)
+                        for cm, co in next, ck, nil do
+                            local cp = cl .. '/' .. cm .. '_v' .. (co.v or 1) .. '.png'
+
+                            if not (b1.has(cp)) then
+                                local cq, cr = pcall(MQ, co.w, co.h, co.px)
+
+                                if cq then
+                                    b1.write(cp, cr)
+                                end
+                            end
+
+                            b4[cm] = b2(cp)
+                        end
+                    end
+
+                    b5 = PQ
+                end
+
+                local function PQ(b9, ca)
+                    local cb = bm('#%02x%02x%02x', bi(b9.R * 255 + 0.5), bi(b9.G * 255 + 0.5), bi(b9.B * 255 + 0.5))
+
+                    return (ca and {
+                        (cb .. bm('%02x', bi(ca * 255 + 0.5))),
+                    } or {cb})[1]
+                end
+                local function TQ(b9)
+                    if type(b9) ~= 'string' then
+                        return nil
+                    end
+
+                    b9 = bq(b9, '[^%x]', '')
+
+                    local ca = #b9
+
+                    if ca ~= 6 then
+                        if ca ~= 8 then
+                            return nil
+                        end
+                    end
+
+                    return a5(tonumber(bn(b9, 1, 2), 16), tonumber(bn(b9, 3, 4), 16), (tonumber(bn(b9, 5, 6), 16))), ca == 8 and tonumber(bn(b9, 7, 8), 16) / 255 or 1
+                end
+
+                local b9, ca
+
+                do
+                    local function ZQ(cb)
+                        return (bq(bq(bq(tostring(cb), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'))
+                    end
+                    local function LQ(cb, cc)
+                        return (bq(ZQ(cb), '{(.-)}', function(cd)
+                            return bm('<font color="%s">%s</font>', PQ(cc), cd)
+                        end))
+                    end
+
+                    local cb = {
+                        Insert = 'INS',
+                        Delete = 'DEL',
+                        Home = 'HOME',
+                        End = 'END',
+                        PageUp = 'PGUP',
+                        PageDown = 'PGDN',
+                        LeftShift = 'LSHIFT',
+                        RightShift = 'RSHIFT',
+                        LeftControl = 'LCTRL',
+                        RightControl = 'RCTRL',
+                        LeftAlt = 'LALT',
+                        RightAlt = 'RALT',
+                        LeftSuper = 'LWIN',
+                        RightSuper = 'RWIN',
+                        CapsLock = 'CAPS',
+                        Backspace = 'BKSP',
+                        Return = 'ENTER',
+                        Space = 'SPACE',
+                        Tab = 'TAB',
+                        Escape = 'ESC',
+                        MouseButton1 = 'M1',
+                        MouseButton2 = 'M2',
+                        MouseButton3 = 'M3',
+                        Zero = '0',
+                        One = '1',
+                        Two = '2',
+                        Three = '3',
+                        Four = '4',
+                        Five = '5',
+                        Six = '6',
+                        Seven = '7',
+                        Eight = '8',
+                        Nine = '9',
+                        Backquote = '`',
+                        Minus = '-',
+                        Equals = '=',
+                        LeftBracket = '[',
+                        RightBracket = ']',
+                        BackSlash = '\\',
+                        Semicolon = ';',
+                        Quote = "'",
+                        Comma = ',',
+                        Period = '.',
+                        Slash = '/',
+                        Up = 'UP',
+                        Down = 'DOWN',
+                        Left = 'LEFT',
+                        Right = 'RIGHT',
+                    }
+
+                    local function oQ(cc)
+                        if not (cc) then
+                            return nil
+                        end
+
+                        local cd = cb[cc]
+
+                        if cd then
+                            return cd
+                        end
+
+                        cd = br(cc, '^Keypad(.+)$')
+
+                        if cd then
+                            return 'NUM' .. (cb[cd] or bo(cd))
+                        end
+
+                        return bo(cc)
+                    end
+
+                    b9, ca = LQ, oQ
+                end
+
+                local function o(cb)
+                    if cb.KeyCode ~= bR then
+                        return cb.KeyCode.Name
+                    end
+
+                    local cc = cb.UserInputType
+
+                    if cc == bK then
+                        return cc.Name
+                    elseif cc == bL then
+                        return cc.Name
+                    elseif cc == bM then
+                        return cc.Name
+                    end
+
+                    return nil
+                end
+
+                local cb = {}
+
+                cb.win = a5(12, 12, 14)
+                cb.bg = a5(7, 7, 9)
+                cb.pop = a5(19, 19, 23)
+                cb.hud = a5(12, 12, 15)
+                cb.txt = a5(230, 230, 236)
+                cb.sub = a5(170, 170, 178)
+                cb.dim = a5(112, 112, 122)
+                cb.faint = a5(68, 68, 76)
+                cb.knob = a5(146, 146, 154)
+                cb.acc = a5(200, 148, 232)
+                cb.ink = a5(22, 14, 28)
+                cb.ok = a5(128, 214, 156)
+                cb.bad = a5(255, 112, 118)
+                cb.warn = a5(255, 198, 96)
+
+                local cc, cd, ce = {
+                    card = 0.958,
+                    edge = 0.935,
+                    sep = 0.955,
+                    hov = 0.972,
+                    ctl = 0.952,
+                    ctle = 0.925,
+                    ctlh = 0.932,
+                    trk = 0.885,
+                    line = 0.94,
+                    tab = 0.925,
+                    sel = 0.952,
+                    phov = 0.962,
+                    psel = 0.945,
+                    pfil = 0.955,
+                }
+
+                do
+                    local cf = Enum.FontWeight
+
+                    cd = {}
+                    cd.r = Font.new('rbxasset://fonts/families/BuilderSans.json', cf.Regular)
+                    cd.m = Font.new('rbxasset://fonts/families/BuilderSans.json', cf.Medium)
+                    cd.s = Font.new('rbxasset://fonts/families/BuilderSans.json', cf.SemiBold)
+                    cd.b = Font.new('rbxasset://fonts/families/BuilderSans.json', cf.Bold)
+                    cd.h = Font.new('rbxasset://fonts/families/Montserrat.json', cf.Bold)
+
+                    local cg, cj = {
+                        geist = {
+                            'geist/v5/gyBhhwUxId8gMGYQMKR3pzfaWI_RnOM4nQ.ttf',
+                            'geist/v5/gyBhhwUxId8gMGYQMKR3pzfaWI_RruM4nQ.ttf',
+                            'geist/v5/gyBhhwUxId8gMGYQMKR3pzfaWI_RQuQ4nQ.ttf',
+                            'geist/v5/gyBhhwUxId8gMGYQMKR3pzfaWI_Re-Q4nQ.ttf',
+                        },
+                        onest = {
+                            'onest/v11/gNMZW3F-SZuj7zOT0IfSjTS16cPh9R-Zsg.ttf',
+                            'onest/v11/gNMZW3F-SZuj7zOT0IfSjTS16cPhxx-Zsg.ttf',
+                            'onest/v11/gNMZW3F-SZuj7zOT0IfSjTS16cPhKxiZsg.ttf',
+                            'onest/v11/gNMZW3F-SZuj7zOT0IfSjTS16cPhEhiZsg.ttf',
+                        },
+                        inter = {
+                            'inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfMZg.ttf',
+                            'inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuI6fMZg.ttf',
+                            'inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuGKYMZg.ttf',
+                            'inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuFuYMZg.ttf',
+                        },
+                    }, {
+                        {
+                            400,
+                            'Regular',
+                        },
+                        {
+                            500,
+                            'Medium',
+                        },
+                        {
+                            600,
+                            'SemiBold',
+                        },
+                        {
+                            700,
+                            'Bold',
+                        },
+                    }
+
+                    local function AQ(ck, cl)
+                        cl = cg[cl] and cl or 'geist'
+
+                        local cm, co = cg[cl], table.create(4)
+
+                        for cp = 1, 4, 1 do
+                            local cq = cj[cp]
+                            local cr = b3(ck .. '/' .. cl .. '-' .. cq[1] .. '.ttf', 'https://fonts.gstatic.com/s/' .. cm[cp], 20000)
+
+                            if not (cr) then
+                                return false
+                            end
+
+                            co[cp] = {
+                                name = cq[2],
+                                weight = cq[1],
+                                style = 'normal',
+                                assetId = cr,
+                            }
+                        end
+
+                        local cp, cq = ck .. '/' .. cl .. '.json', aQ{
+                            name = cl,
+                            faces = co,
+                        }
+
+                        if cq then
+                            if not (b1.write(cp, cq)) then
+                                return false
+                            end
+                        else
+                            return false
+                        end
+
+                        cq = b2(cp)
+
+                        if not cq then
+                            return false
+                        end
+
+                        cd.r, cd.m, cd.s, cd.b = Font.new(cq, cf.Regular), Font.new(cq, cf.Medium), Font.new(cq, cf.SemiBold), Font.new(cq, cf.Bold)
+
+                        return true
+                    end
+
+                    ce = AQ
+                end
+
+                local cf = {
+                    logo = 106124864132557,
+                    code = 106124864132557,
+                    aim = 80648116191645,
+                    crosshair = 83752373575368,
+                    target = 121091323240554,
+                    dot = 122878673716704,
+                    trigger = 81854854241463,
+                    zap = 109718589733073,
+                    eye = 127234874352422,
+                    view = 127234874352422,
+                    players = 119713822992150,
+                    users = 85332511060401,
+                    user = 114567720540659,
+                    chams = 132705178126217,
+                    world = 75025349205767,
+                    globe = 125685532120024,
+                    move = 80792036653047,
+                    misc = 133109875194066,
+                    skins = 127369887384101,
+                    spray = 97652569554326,
+                    bug = 75649814233484,
+                    map = 131325044235094,
+                    configs = 97828544806816,
+                    folder = 77937190465422,
+                    settings = 106205298246017,
+                    cog = 123222732420633,
+                    sliders = 125396339381135,
+                    gear = 109485777305919,
+                    save = 122894934359450,
+                    chevron = 71457658246709,
+                    right = 101007429951147,
+                    dots = 95127553964880,
+                    check = 86817768619372,
+                    x = 116396312853810,
+                    keyboard = 121978468376124,
+                    plus = 101123124881873,
+                    pencil = 113132794872298,
+                    trash = 126010725826757,
+                    refresh = 106497040962250,
+                    load = 109698732019071,
+                    copy = 116378866141355,
+                    import = 87776530532335,
+                    clock = 136533241128438,
+                    wifi = 104941258142372,
+                    layers = 114499998778667,
+                    grip = 128492050787735,
+                    bomb = 85112456002145,
+                    shield = 106509993556171,
+                    sparkles = 105634041692696,
+                    sun = 139232691165198,
+                    bell = 84691420588185,
+                    gamepad = 99293705721130,
+                    flag = 121835250831612,
+                    feather = 103991922506350,
+                    ram = 82464660673318,
+                    cpu = 105237370909681,
+                    skull = 101060850237115,
+                    camera = 114084146151777,
+                    volume = 129861259578431,
+                    message = 86432989388834,
+                    power = 89331085993646,
+                }
+
+                local function XQ(cg)
+                    if cg == nil then
+                        return ''
+                    end
+
+                    local cj = cf[cg]
+
+                    if cj then
+                        return 'rbxassetid://' .. cj
+                    end
+                    if type(cg) == 'number' then
+                        return 'rbxassetid://' .. cg
+                    end
+
+                    return tostring(cg)
+                end
+
+                local cg
+
+                do
+                    local cj = {
+                        Frame = {
+                            BorderSizePixel = 0,
+                            BackgroundTransparency = 1,
+                        },
+                        CanvasGroup = {
+                            BorderSizePixel = 0,
+                            BackgroundTransparency = 1,
+                        },
+                    }
+
+                    cj.ScrollingFrame = {
+                        BorderSizePixel = 0,
+                        BackgroundTransparency = 1,
+                        ScrollBarThickness = 0,
+                        ScrollBarImageColor3 = bW,
+                        ScrollBarImageTransparency = 1,
+                        CanvasSize = a8(0, 0, 0, 0),
+                        AutomaticCanvasSize = bE,
+                        ScrollingDirection = Enum.ScrollingDirection.Y,
+                        ElasticBehavior = Enum.ElasticBehavior.Never,
+                    }
+                    cj.TextLabel = {
+                        BorderSizePixel = 0,
+                        BackgroundTransparency = 1,
+                        TextXAlignment = bC.Left,
+                        TextSize = 14,
+                        Text = '',
+                        AutoLocalize = false,
+                    }
+                    cj.TextButton = {
+                        BorderSizePixel = 0,
+                        BackgroundTransparency = 1,
+                        AutoButtonColor = false,
+                        Text = '',
+                        TextSize = 14,
+                        AutoLocalize = false,
+                    }
+                    cj.TextBox = {
+                        BorderSizePixel = 0,
+                        BackgroundTransparency = 1,
+                        ClearTextOnFocus = false,
+                        TextXAlignment = bC.Left,
+                        TextSize = 14,
+                        Text = '',
+                        AutoLocalize = false,
+                    }
+                    cj.ImageLabel = {
+                        BorderSizePixel = 0,
+                        BackgroundTransparency = 1,
+                        ScaleType = Enum.ScaleType.Fit,
+                    }
+                    cj.ImageButton = {
+                        BorderSizePixel = 0,
+                        BackgroundTransparency = 1,
+                        AutoButtonColor = false,
+                        ScaleType = Enum.ScaleType.Fit,
+                    }
+
+                    local ck = {
+                        TextLabel = true,
+                        TextButton = true,
+                        TextBox = true,
+                    }
+
+                    local function JQ(cl, cm, co)
+                        local cp, cq = Instance.new(cl), cj[cl]
+
+                        if cq then
+                            for cr, cs in next, cq, nil do
+                                cp[cr] = cs
+                            end
+                        end
+                        if ck[cl] then
+                            cp.FontFace = cd.s
+                            cp.TextColor3 = cb.txt
+                        end
+
+                        cq = nil
+
+                        if cm then
+                            for cr, cs in next, cm, nil do
+                                if cr == 'Parent' then
+                                    cq = cs
+                                else
+                                    cp[cr] = cs
+                                end
+                            end
+                        end
+                        if co then
+                            for cr, cs in next, co, nil do
+                                cp[cr] = cb[cs]
+
+                                cp:SetAttribute('t_' .. cr, cs)
+                            end
+                        end
+                        if cq then
+                            cp.Parent = cq
+                        end
+
+                        return cp
+                    end
+
+                    cg = JQ
+                end
+
+                local function SQ(cj, ck)
+                    return cg('UICorner', {
+                        CornerRadius = bb(0, ck or 6),
+                        Parent = cj,
+                    })
+                end
+                local function AQ(cj)
+                    return cg('UICorner', {
+                        CornerRadius = bb(1, 0),
+                        Parent = cj,
+                    })
+                end
+
+                local cj, ck
+
+                do
+                    as, R = setmetatable, {
+                        __mode = 'k',
+                    }
+
+                    local cl, cm = as({}, R), 1
+
+                    local function IQ(co, cp, cq)
+                        local cr = cg('UIStroke', {
+                            Color = cq or bW,
+                            Transparency = cp or cc.edge,
+                            Thickness = cm,
+                            ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+                            Parent = co,
+                        })
+
+                        cl[cr] = true
+
+                        return cr
+                    end
+                    local function iQ(co, cp)
+                        cm = co < 1 and 1 / co or 1
+
+                        for cq in next, cl, nil do
+                            if cq.Parent then
+                                cq.Thickness = cp and cq:IsDescendantOf(cp) and cm or 1
+                            else
+                                cl[cq] = nil
+                            end
+                        end
+                    end
+
+                    cj, ck = IQ, iQ
+                end
+
+                local function eQ(cl, cm, co, cp, cq)
+                    return cg('UIPadding', {
+                        PaddingLeft = bb(0, cm or 0),
+                        PaddingRight = bb(0, co or 0),
+                        PaddingTop = bb(0, cp or 0),
+                        PaddingBottom = bb(0, cq or 0),
+                        Parent = cl,
+                    })
+                end
+                local function MQ(cl, cm, co)
+                    return cg('UIListLayout', {
+                        SortOrder = Enum.SortOrder.LayoutOrder,
+                        Padding = bb(0, cm or 0),
+                        HorizontalAlignment = co or bH.Left,
+                        Parent = cl,
+                    })
+                end
+                local function IQ(cl, cm, co)
+                    return cg('UIListLayout', {
+                        SortOrder = Enum.SortOrder.LayoutOrder,
+                        FillDirection = Enum.FillDirection.Horizontal,
+                        Padding = bb(0, cm or 0),
+                        HorizontalAlignment = co or bH.Left,
+                        VerticalAlignment = bI.Center,
+                        Parent = cl,
+                    })
+                end
+
+                local cl
+
+                do
+                    local cm = {}
+
+                    local function kQ(co, cp, cq, cr, cs)
+                        cq, cr, cs = cq or 0.16, cr or bT, cs or 0
+
+                        local ct = cr.Name .. cq .. ':' .. cs
+                        local cu = cm[ct]
+
+                        if cu then
+                        else
+                            cu = TweenInfo.new(cq, cr, Enum.EasingDirection.Out, 0, false, cs)
+                            cm[ct] = cu
+                        end
+
+                        ct = aZ:Create(co, cu, cp)
+
+                        ct:Play()
+
+                        return ct
+                    end
+
+                    cl = kQ
+                end
+
+                local function lQ(cm, co)
+                    local cp, cq = cm.AbsolutePosition, cm.AbsoluteSize
+
+                    return co.X >= cp.X and co.Y >= cp.Y and co.X <= cp.X + cq.X and co.Y <= cp.Y + cq.Y
+                end
+
+                local cm, co = {
+                    flags = {},
+                    els = {},
+                    fl = {},
+                    profs = {},
+                    dir = 'polar',
+                    thm = cb,
+                    fnt = cd,
+                    ico = cf,
+                    ver = '1.0.0',
+                }, {}
+
+                co.md = b0.new()
+                co.pops = {}
+                co.bmap = {}
+                co.drag = {}
+                co.open = false
+                co.dead = false
+                co.live = false
+                co.fn = 0
+                co.unl = {}
+                co.bgt = 0.08
+                co.blur = true
+                as, R = setmetatable, {
+                    __mode = 'k',
+                }
+                co.hbg = as({}, R)
+
+                local function nQ()
+                    local cp = co.us
+
+                    return cp and cp.Scale or 1
+                end
+                local function BQ()
+                    local cp = co.tp
+
+                    if cp then
+                        return cp
+                    end
+
+                    local cq, cr = aY:GetMouseLocation(), co.probe
+
+                    if cr then
+                        return cq + cr.AbsolutePosition
+                    end
+
+                    return cq
+                end
+                local function dQ(cq)
+                    local cr = cq.Position
+
+                    return bc(cr.X, cr.Y)
+                end
+                local function bQ(cq)
+                    return cq == bK or cq == bO
+                end
+
+                local cq, cr, cs, ct
+
+                local function HQ(cu, cv, cw, cx)
+                    local cy = co.drag
+
+                    cy.mv = cu
+                    cy.up = cv
+                    cy.own = cw
+                    cy.ti = cx and cx.UserInputType == bO and cx or nil
+                end
+                local function wQ(cu)
+                    local cv = co.drag
+                    local cw = cv.up
+
+                    cv.mv = nil
+                    cv.up = nil
+                    cv.own = nil
+                    cv.ti = nil
+
+                    if cw then
+                        cw(cu)
+                    end
+                end
+
+                as, R = setmetatable, {
+                    __mode = 'k',
+                }
+
+                local cu, cv, cw = as({}, R), nil, nil
+
+                do
+                    local function _i(cx, cy)
+                        local cz = co.pops
+                        local cA = cx and bt(cz, cx) or 0
+
+                        for cB = #cz, cA + 1, -1 do
+                            if lQ(cz[cB].frame, cy) then
+                                return true
+                            end
+                        end
+
+                        return false
+                    end
+                    local function Ni(cx, cy)
+                        local cz, cA = cx.o, cx.p
+
+                        if cz.Parent == nil then
+                            cx.i = false
+                            cu[cx] = nil
+                        end
+
+                        local cB = cx.i and co.open and (cA == nil or cA.isopen == true) and lQ(cz, cy) and not _i(cA, cy)
+
+                        if cB ~= cx.s then
+                            cx.s = cB
+
+                            if cB then
+                                cx.on()
+                            else
+                                cx.off()
+                            end
+                        end
+                    end
+                    local function _i()
+                        if next(cu) == nil then
+                            return
+                        end
+
+                        local cx = BQ()
+
+                        for cy in next, cu, nil do
+                            Ni(cy, cx)
+                        end
+                    end
+                    local function hi(cx, cy, cz, cA)
+                        local cB = {
+                            o = cx,
+                            p = cy,
+                            on = cz,
+                            off = cA,
+                            i = false,
+                            s = false,
+                        }
+
+                        GQ(cx.MouseEnter, function()
+                            cB.i = true
+                            cu[cB] = true
+
+                            Ni(cB, BQ())
+                        end)
+                        GQ(cx.MouseLeave, function()
+                            cB.i = false
+                            cu[cB] = nil
+
+                            Ni(cB, BQ())
+                        end)
+
+                        return cB
+                    end
+
+                    cv, cw = _i, hi
+                end
+
+                local function _i(cx, cy, cz, cA, cB, cC)
+                    return cw(cx, cy, function()
+                        cl(cx, {[cz] = cB}, cC or 0.12)
+                    end, function()
+                        cl(cx, {[cz] = cA}, cC or 0.12)
+                    end)
+                end
+                local function Ni(cx, cy)
+                    GQ(cx.InputBegan, function(cz)
+                        if cz.UserInputType ~= bO then
+                            return
+                        end
+
+                        local cA = cz.Position
+
+                        bA(0.5, function()
+                            if cz.UserInputState ~= bP then
+                                if (cz.Position - cA).Magnitude < 10 then
+                                    if not (co.dead) then
+                                        cy(cz)
+                                    end
+                                end
+                            end
+                        end)
+                    end)
+                end
+                local function FQ(cx)
+                    return cg('TextButton', {
+                        Size = ba(1, 1),
+                        ZIndex = 0,
+                        Parent = cx,
+                    })
+                end
+                local function hi(cx, cy, cz)
+                    if not (b4.shadow) then
+                        return nil
+                    end
+
+                    local cA = (cy or 12) / 12
+
+                    cy = bi(28 * cA + 0.5)
+
+                    return cg('ImageLabel', {
+                        Image = b4.shadow,
+                        ScaleType = Enum.ScaleType.Slice,
+                        SliceCenter = Rect.new(40, 40, 56, 56),
+                        SliceScale = cA,
+                        ImageTransparency = cz or 0,
+                        Position = a9(-cy, -cy),
+                        Size = a8(1, cy * 2, 1, cy * 2),
+                        ZIndex = 0,
+                        Parent = cx,
+                    })
+                end
+                local function Fi()
+                    return co.live == true and co.open and co.ft == nil and not co.dead
+                end
+
+                as, R = setmetatable, {
+                    __mode = 'k',
+                }
+
+                local cx, cy = as({}, R), nil
+
+                do
+                    local cz = Enum.EasingStyle.Cubic
+
+                    local function gi(cA, cB, cC, cD, cE, cF)
+                        local cG, cH = cx[cA]
+
+                        if cG then
+                            cH = cG
+                        else
+                            if cE and co.live and not co.dead or Fi() then
+                                if not (cA.Parent) then
+                                    cA.Visible = cB
+
+                                    if cF then
+                                        cF()
+                                    end
+
+                                    return
+                                end
+                            else
+                                cA.Visible = cB
+
+                                if cF then
+                                    cF()
+                                end
+
+                                return
+                            end
+                            if not cB and not cA.Visible then
+                                if cF then
+                                    cF()
+                                end
+
+                                return
+                            end
+
+                            local cI, cJ = cA.AutomaticSize, cA.Size
+                            local cK, cL, cM, cN = cI == bD or cI == bF, cI == bE or cI == bF, cE and 20 or 0, cA.AnchorPoint
+
+                            cG = {}
+                            cG.p = cA.Parent
+                            cG.pos = cA.Position
+                            cG.ap = cN
+                            cG.sz = cJ
+                            cG.n = 0
+                            cG.m = cM
+                            cG.d = a9(cM * (2 * cN.X - 1), cM * (2 * cN.Y - 1))
+                            cG.g = cg('CanvasGroup', {
+                                Position = cG.pos + cG.d,
+                                AnchorPoint = cN,
+                                Size = cJ + a9(cM * 2, cM * 2),
+                                AutomaticSize = cI,
+                                LayoutOrder = cA.LayoutOrder,
+                                ZIndex = cA.ZIndex,
+                                GroupTransparency = cB and 1 or 0,
+                                Parent = cG.p,
+                            })
+
+                            if cM > 0 then
+                                eQ(cG.g, cM, cM, cM, cM)
+                            end
+
+                            cx[cA] = cG
+                            cA.Parent = cG.g
+                            cA.AnchorPoint = bc(0, 0)
+                            cA.Position = a9(0, 0)
+                            cA.Size = a8(cK and 0 or 1, cK and cJ.X.Offset or 0, cL and 0 or 1, cL and cJ.Y.Offset or 0)
+                            cH = cG
+                        end
+
+                        cH.n = cH.n + 1
+
+                        local cI = cH.n
+
+                        if cB then
+                            cA.Visible = true
+                        end
+
+                        cH.g.Interactable = cB
+
+                        local cJ, cK, cL, cM, cN = cH.g, {
+                            GroupTransparency = cB and 0 or 1,
+                        }, cC or 0.2, cB and bU or cz, function(cJ)
+                            if cJ ~= bS then
+                                return
+                            elseif cH.n ~= cI then
+                                return
+                            elseif cx[cA] ~= cH then
+                                return
+                            end
+
+                            cx[cA] = nil
+
+                            if not (cB) then
+                                cA.Visible = false
+                            end
+
+                            pcall(function()
+                                cA.Parent = cH.p
+                                cA.Position, cA.AnchorPoint, cA.Size = cH.pos, cH.ap, cH.sz
+                            end)
+                            cH.g:Destroy()
+
+                            if cF then
+                                cF()
+                            end
+                        end
+
+                        cl(cJ, cK, cL, cM, cB and cD or nil).Completed:Once(cN)
+                    end
+
+                    cy = gi
+                end
+
+                local function li(cz)
+                    local cA = cx[cz]
+
+                    if cA then
+                        cx[cz] = nil
+
+                        cA.g:Destroy()
+                    end
+
+                    cz:Destroy()
+                end
+                local function gi(cz)
+                    local cA = cx[cz]
+
+                    return cA and cA.pos or cz.Position
+                end
+                local function ui(cz, cA)
+                    local cB = cx[cz]
+
+                    if cB then
+                        cB.pos = cA
+                        cB.g.Position = cA + cB.d
+                    else
+                        cz.Position = cA
+                    end
+                end
+                local function si(cz, cA)
+                    local cB = cx[cz]
+
+                    if cB then
+                        cB.sz = cA
+                        cB.g.Size = cA + a9(cB.m * 2, cB.m * 2)
+                    else
+                        cz.Size = cA
+                    end
+                end
+
+                R, as = setmetatable, {
+                    __mode = 'k',
+                }
+
+                local cz = R({}, as)
+
+                local function zi(cA, cB, cC)
+                    if cz[cA] == cB then
+                        return
+                    end
+
+                    cz[cA] = cB
+
+                    cy(cA, cB, cC or 0.2, nil, true)
+                end
+
+                local cA, cB
+
+                do
+                    local cC = {}
+
+                    cC.__index = cC
+
+                    local function Gi(cD, cE, cF)
+                        local cH = co.mt
+
+                        if (cH and {
+                            (not cH.Parent),
+                        } or {
+                            (not cH),
+                        })[1] then
+                            cH = cg('TextLabel', {
+                                Size = a9(0, 0),
+                                TextTransparency = 1,
+                                Parent = co.gui,
+                            })
+                            co.mt = cH
+                        end
+
+                        cH.FontFace = cE or cd.s
+                        cH.TextSize = cF or 13
+                        cH.Text = bp(tostring(cD or ''))
+
+                        return cH.TextBounds.X
+                    end
+
+                    as, R = setmetatable, {
+                        __mode = 'k',
+                    }
+
+                    local cD = as({}, R)
+
+                    local function R(cE)
+                        GQ(cE.DescendantAdded, function(cF)
+                            if cD[cF] then
+                                return
+                            end
+
+                            local cH = cF:IsA'TextBox' and 'PlaceholderText' or (cF:IsA'TextLabel' or cF:IsA'TextButton') and 'Text'
+
+                            if not cH then
+                                return
+                            end
+
+                            cD[cF] = true
+
+                            local function ai()
+                                local cI = cF[cH]
+                                local cJ = bp(cI)
+
+                                if cI ~= cJ then
+                                    cF[cH] = cJ
+                                end
+                            end
+
+                            ai()
+                            GQ(cF:GetPropertyChangedSignal(cH), ai)
+                        end)
+                    end
+                    local function _(cE)
+                        local cF = setmetatable({
+                            w = cE.w or 180,
+                            aw = cE.w == nil and not cE.raw,
+                            keep = cE.keep,
+                            par = cE.par,
+                            anchor = cE.anchor,
+                            md = b0.new(),
+                            isopen = false,
+                            px = 0,
+                            py = 0,
+                            an = 0,
+                        }, cC)
+
+                        cF.box = cg('Frame', {
+                            Size = a9(cF.w, 0),
+                            Visible = false,
+                            Parent = co.pl,
+                        })
+
+                        local cH, cI = cE.rad or 10, cg('Frame', {
+                            Size = ba(1, 1),
+                            BackgroundTransparency = 0,
+                            Parent = cF.box,
+                        }, {
+                            BackgroundColor3 = 'pop',
+                        })
+
+                        cF.frame = cI
+
+                        SQ(cI, cH)
+                        cg('UIGradient', {
+                            Rotation = 90,
+                            Color = bd(bW, a7(0.84, 0.84, 0.86)),
+                            Parent = cI,
+                        })
+                        cg('UIGradient', {
+                            Rotation = 90,
+                            Transparency = bf(0.1, 0.75),
+                            Parent = cj(cI, 0.88),
+                        })
+                        hi(cI, cH, 0)
+                        FQ(cI)
+
+                        local cJ = cg('Frame', {
+                            Size = a8(1, 0, 0, 46),
+                            BackgroundColor3 = bW,
+                            BackgroundTransparency = 0,
+                            ZIndex = 1,
+                            Parent = cI,
+                        })
+
+                        SQ(cJ, cH)
+                        cg('UIGradient', {
+                            Rotation = 90,
+                            Transparency = bf{
+                                bg(0, 0.962),
+                                bg(0.7, 0.99),
+                                bg(1, 1),
+                            },
+                            Parent = cJ,
+                        })
+
+                        cJ = cg('Frame', {
+                            Size = a8(1, 0, 0, 0),
+                            AutomaticSize = bE,
+                            ZIndex = 2,
+                            Parent = cI,
+                        })
+                        cF.body = cJ
+
+                        GQ(cJ:GetPropertyChangedSignal'AbsoluteSize', function()
+                            cF:fit()
+                        end)
+
+                        if not (cE.raw) then
+                            eQ(cJ, 6, 6, cE.title and 0 or 6, 6)
+                            MQ(cJ, 6)
+
+                            if cE.title then
+                                cF:head(cE.title)
+                            end
+
+                            cF.c = cs(cJ, cE.tab, cF)
+                            cF.c.tmp = cE.tmp
+                        end
+
+                        return cF
+                    end
+
+                    cC.head = function(cE, cF)
+                        local cH = cg('Frame', {
+                            Size = a8(1, 0, 0, 38),
+                            LayoutOrder = -1,
+                            Parent = cE.body,
+                        })
+
+                        cE.ttl = bp(tostring(cF or ''))
+
+                        cg('TextLabel', {
+                            Position = a9(12, 1),
+                            Size = a8(1, -48, 1, 0),
+                            Text = cE.ttl,
+                            FontFace = cd.h,
+                            TextSize = 14,
+                            TextTruncate = bJ,
+                            Parent = cH,
+                        }, {
+                            TextColor3 = 'txt',
+                        })
+
+                        cF = cg('Frame', {
+                            AnchorPoint = bc(1, 0.5),
+                            Position = a8(1, -2, 0.5, 1),
+                            Size = a9(0, 24),
+                            AutomaticSize = bD,
+                            Parent = cH,
+                        })
+
+                        IQ(cF, 2, bH.Right)
+
+                        cE.hd = cH
+                        cE.hr = cF
+
+                        return cH
+                    end
+                    cC.fitw = function(cE)
+                        local cF = nQ()
+                        local cH, cI = (cE.ttl and {
+                            (bj(172, 12 + Gi(cE.ttl, cd.h, 14) + 16 + cE.hr.AbsoluteSize.X / cF + 14)),
+                        } or {172})[1], cE.rws
+
+                        if cI then
+                            for cJ = #cI, 1, -1 do
+                                local cK = cI[cJ]
+
+                                if cK.r.Parent then
+                                    cH = (cK.r.Visible and {
+                                        (bj(cH, cK.x + (cK.n and Gi(bp(cK.n)) + 8 or 0) + cK.af.AbsoluteSize.X / cF + 26)),
+                                    } or {cH})[1]
+                                else
+                                    bu(cI, cJ)
+                                end
+                            end
+                        end
+
+                        cE.w = bi(bk(cH, 340) + 0.5)
+                    end
+                    cC.hbtn = function(cE, cF, cH, cI)
+                        local cJ = cg('ImageButton', {
+                            Size = a9(24, 24),
+                            BackgroundColor3 = bW,
+                            BackgroundTransparency = 1,
+                            Parent = cE.hr,
+                        })
+
+                        SQ(cJ, 7)
+
+                        local cK = cg('ImageLabel', {
+                            AnchorPoint = bc(0.5, 0.5),
+                            Position = ba(0.5, 0.5),
+                            Size = a9(13, 13),
+                            Image = XQ(cF),
+                            Parent = cJ,
+                        }, {
+                            ImageColor3 = 'dim',
+                        })
+
+                        cw(cJ, cE, function()
+                            cl(cJ, {
+                                BackgroundTransparency = cc.pfil,
+                            }, 0.12, bU)
+                            cl(cK, {
+                                ImageColor3 = cb[cH or 'txt'],
+                            }, 0.12, bU)
+                        end, function()
+                            cl(cJ, {BackgroundTransparency = 1}, 0.12, bU)
+                            cl(cK, {
+                                ImageColor3 = cb.dim,
+                            }, 0.12, bU)
+                        end)
+                        GQ(cJ.MouseButton1Click, cI)
+
+                        return cJ, cK
+                    end
+                    cC.fit = function(cE)
+                        local cF = cE.body.AbsoluteSize.Y / nQ()
+
+                        cE.box.Size = a9(cE.w, bi(cF + 0.5))
+                    end
+                    cC.clampit = function(cE)
+                        local cF = cE.box
+
+                        if cF.Parent then
+                            if not (co.pl) then
+                                return
+                            end
+                        else
+                            return
+                        end
+
+                        local cH, cI, cJ, cK, cL = nQ(), co.pl.AbsolutePosition, co.probe.AbsolutePosition, co.gui.AbsoluteSize, cE.frame.AbsoluteSize
+                        local cM, cN = bh(cI.X + cE.px * cH, cJ.X + 6, bj(cJ.X + 6, cJ.X + cK.X - cL.X - 6)), bh(cI.Y + cE.py * cH, cJ.Y + 6, bj(cJ.Y + 6, cJ.Y + cK.Y - cL.Y - 6))
+
+                        cF.Position = a9(bi((cM - cI.X) / cH + 0.5), bi((cN - cI.Y) / cH + 0.5))
+                    end
+                    cC.place = function(cE, cF, cH)
+                        local cI, cJ = nQ(), co.pl.AbsolutePosition
+
+                        cE.px, cE.py = (cF - cJ.X) / cI, (cH - cJ.Y) / cI
+                        cE.box.Position = a9(cE.px, cE.py)
+
+                        cE:clampit()
+
+                        cF, cI, cJ = cE.md, cE.frame, function()
+                            cE:clampit()
+                        end
+
+                        cF:add(cI:GetPropertyChangedSignal'AbsoluteSize':Connect(cJ))
+                    end
+
+                    local function t(cE)
+                        local cF = cE.cg
+
+                        if cF then
+                            cE.cg = nil
+
+                            if cE.frame.Parent == cF then
+                                cE.frame.Parent = cE.box
+                            end
+
+                            cF:Destroy()
+                        end
+                    end
+
+                    cC.settle = function(cE)
+                        cE.an = cE.an + 1
+
+                        t(cE)
+                    end
+                    cC.anim = function(cE, cF, cH)
+                        cE.an = cE.an + 1
+
+                        local cI, cJ = cE.an, cE.cg
+
+                        if cJ then
+                        else
+                            cJ = cg('CanvasGroup', {
+                                Position = a9(-24, -24),
+                                Size = a8(1, 48, 1, 48),
+                                GroupTransparency = cF and 1 or 0,
+                                Parent = cE.box,
+                            })
+
+                            eQ(cJ, 24, 24, 24, 24)
+
+                            cE.cg = cJ
+                            cE.frame.Parent = cJ
+                        end
+
+                        cJ.Interactable = cF
+
+                        local cK, cL, cM = {
+                            GroupTransparency = cF and 0 or 1,
+                        }, cF and 0.2 or 0.18, cF and bU
+                        local cN, cO = cl(cJ, cK, cL, cM or bV), function(cN)
+                            if cN ~= bS then
+                                return
+                            elseif cE.an ~= cI then
+                                return
+                            end
+
+                            t(cE)
+
+                            if cH then
+                                cH()
+                            end
+                        end
+
+                        cN.Completed:Once(cO)
+                    end
+                    cC.hide = function(cE, cF)
+                        if not (cE.isopen) then
+                            return
+                        end
+
+                        cE.isopen = false
+
+                        cE.md:clean()
+
+                        if co.drag.own == cE then
+                            wQ()
+                        end
+
+                        local cH = co.listen
+
+                        if cH then
+                            if cH.c then
+                                if cH.c.pop == cE then
+                                    co.listen = nil
+                                    cH.lst = false
+
+                                    cH:draw()
+                                end
+                            end
+                        end
+
+                        cH = cE.onclose
+
+                        if cH then
+                            cE.onclose = nil
+
+                            cH()
+                        end
+
+                        local cI, cJ = cE.box
+
+                        if cE.keep then
+                            cJ = function()
+                                cI.Visible = false
+                            end
+                        else
+                            cE.dead = true
+                            cJ = function()
+                                cI:Destroy()
+                            end
+                        end
+                        if cF or not Fi() then
+                            cE:settle()
+                            cJ()
+                        else
+                            cE:anim(false, cJ)
+                        end
+                    end
+                    cA, cB = R, _
+                end
+
+                local function R(cC, cD)
+                    local cE = co.pops
+                    local cF = #cE
+
+                    for cI = cF, bj(cC, 1), -1 do
+                        local cJ = cE[cI]
+
+                        cE[cI] = nil
+
+                        cJ:hide(cD)
+                    end
+
+                    if cF >= bj(cC, 1) then
+                        cv()
+                    end
+                end
+                local function _(cC)
+                    R(1, cC)
+                end
+                local function t(cC)
+                    local cD = bt(co.pops, cC)
+
+                    if cD then
+                        R(cD)
+                    end
+                end
+                local function uQ(cC, cD, cE)
+                    local cF = co.pops
+
+                    R((cC.par and bt(cF, cC.par) or 0) + 1)
+
+                    cF[#cF + 1] = cC
+                    cC.isopen = true
+                    cC.box.ZIndex = 10 + #cF
+                    cC.box.Visible = true
+
+                    if cC.aw then
+                        cC:fitw()
+                    end
+
+                    cC:fit()
+                    cC:place(cD, cE)
+
+                    if Fi() then
+                        cC:anim(true)
+                    else
+                        cC:settle()
+                    end
+
+                    cv()
+                end
+                local function xQ(cC)
+                    local cD = co.pops
+
+                    for cE = #cD, 1, -1 do
+                        local cF = cD[cE]
+
+                        if lQ(cF.frame, cC) then
+                            R(cE + 1)
+
+                            return
+                        elseif cF.anchor then
+                            if cF.anchor.Parent then
+                                if lQ(cF.anchor, cC) then
+                                    R(cE + 1)
+
+                                    return
+                                end
+                            end
+                        end
+                    end
+
+                    _()
+                end
+                local function Fi(cC, cD)
+                    local cE = co.bmap[cD]
+
+                    if cE then
+                    else
+                        cE = {}
+                        co.bmap[cD] = cE
+                    end
+                    if not (bt(cE, cC)) then
+                        cE[#cE + 1] = cC
+                    end
+                end
+                local function xi(cC, cD)
+                    local cE = co.bmap[cD]
+
+                    if not (cE) then
+                        return
+                    end
+
+                    local cF = bt(cE, cC)
+
+                    if cF then
+                        bu(cE, cF)
+                    end
+                    if #cE == 0 then
+                        co.bmap[cD] = nil
+                    end
+                end
+
+                local cC = {
+                    MouseButton1 = true,
+                    MouseButton2 = true,
+                    MouseButton3 = true,
+                }
+
+                local function ai(cD)
+                    if cD then
+                        if co.open then
+                            if not (co.root) then
+                                return false
+                            end
+                        else
+                            return false
+                        end
+                    else
+                        return false
+                    end
+                    if lQ(co.root, cD) then
+                        return true
+                    end
+
+                    local cE = co.pops
+
+                    for cF = 1, #cE, 1 do
+                        if lQ(cE[cF].frame, cD) then
+                            return true
+                        end
+                    end
+
+                    return false
+                end
+                local function lQ(cD)
+                    if co.dead then
+                        return
+                    end
+
+                    local cE, cF = cD.UserInputType
+
+                    if cE == bO then
+                        cF = dQ(cD)
+                        co.tp = cF
+                    else
+                        if cE == bK or cE == bL or cE == bM then
+                            co.tp = nil
+                            cF = (BQ())
+                        end
+                    end
+
+                    local cI = co.listen
+
+                    if cI then
+                        local cJ = o(cD)
+
+                        if cJ then
+                            co.listen = nil
+                            cI.lst = false
+
+                            if cJ == 'Escape' then
+                                cI:setkey(nil)
+                            elseif cJ == 'Backspace' then
+                                cI:setkey(nil)
+                            elseif cC[cJ] and cI.o.nomouse or cJ == 'MouseButton1' and ai(cF) then
+                                cI:draw()
+                            else
+                                if cC[cJ] then
+                                    co.eat = cI
+
+                                    bA(0.35, function()
+                                        if co.eat == cI then
+                       …
