@@ -155,7 +155,7 @@ local Window = WindUI:CreateWindow({
 })
 
 -- ==========================================
--- 4. SISTEMA DE EXECUÇÃO DE SCRIPTS (COM AUTO-CORREÇÃO)
+-- 4. SISTEMA DE EXECUÇÃO DE SCRIPTS (SEM CORREÇÃO AUTOMÁTICA)
 -- ==========================================
 local LoadedScripts: {[string]: thread} = {}
 local FetchedCache: {[string]: string} = {}
@@ -169,11 +169,6 @@ local function executeScript(scriptName: string, url: string): (boolean, string?
         if not ok or type(result) ~= "string" or #result < 8 then
             return false, "Falha no download"
         end
-        
-        -- 🔥 CORREÇÃO MÁGICA AQUI 🔥
-        -- Troca o caractere "…" (U+2026) por "..." (três pontos normais)
-        result = string.gsub(result, "…", "...")
-        
         FetchedCache[scriptName] = result
     end
     
