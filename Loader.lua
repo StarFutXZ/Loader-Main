@@ -2,41 +2,11 @@
 -- [[ Eclipse Hub — Secure API + HWID System ]]
 
 local HttpService = game:GetService("HttpService")
-local RunService = game:GetService("RunService")
 local player = game.Players.LocalPlayer
-
--- BLOQUEIO DE STUDIO (Protege o código contra curiosos)
-if RunService:IsStudio() then
-    return warn("[Eclipse] Execução bloqueada no Roblox Studio por questões de segurança.")
-end
 
 local function notify(title, text)
     pcall(function() game.StarterGui:SetCore("SendNotification", { Title = title, Text = text, Duration = 5 }) end)
 end
-
--- ==========================================
--- OFUSCAÇÃO AVANÇADA (BASE64)
--- ==========================================
-local B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-local function _d(data)
-    data = string.gsub(data, '[^' .. B64 .. '=]', '')
-    return (data:gsub('.', function(x)
-        if (x == '=') then return '' end
-        local r, f = '', (B64:find(x) - 1)
-        for i = 6, 1, -1 do r = r .. (f % 2^i - f % 2^(i-1) > 0 and '1' or '0') end
-        return r;
-    end):gsub('%d%d%d?%d?%d?%d?%d?%d?', function(x)
-        if (#x ~= 8) then return '' end
-        local c = 0
-        for i = 1, 8 do c = c + (x:sub(i, i) == '1' and 2^(8-i) or 0) end
-        return string.char(c)
-    end))
-end
-
--- Links encriptados em Base64 (Ocultos aos olhos)
-local _uWindUI = _d("aHR0cHM6Ly9naXRodWIuY29tL0Zvb3RhZ2VzdXMvV2luZFVJL3JlbGVhc2VzL2xhdGVzdC9kb3dubG9hZC9tYWluLmx1YQ==")
-local _uApiBase = _d("aHR0cHM6Ly9lY2xpcHNlLXByb3h5LmFuZHJlcGVxdWVubzMxLndvcmtlcnMuZGV2L2FwaS92YWxpZGF0ZQ==")
-local _uManifest = _d("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1N0YXJGdXR2Wi9Mb2FkZXItTWFpbi9yZWZzL2hlYWRzL21haW4vbWFuaWZlc3QuanNvbg==")
 
 -- ==========================================
 -- 1. SISTEMA DE SEGURANÇA (KEY + HWID)
@@ -52,7 +22,7 @@ userKey = string.gsub(userKey, "[%s\"']", "")
 notify("Eclipse", "A validar Key e Dispositivo...")
 
 local hwid = "USER_" .. tostring(player.UserId)
-local API_URL = _uApiBase .. "?key=" .. HttpService:UrlEncode(userKey) .. "&hwid=" .. HttpService:UrlEncode(hwid) .. "&_t=" .. tostring(tick())
+local API_URL = "https://eclipse-proxy.andrepequeno31.workers.dev/api/validate?key=" .. HttpService:UrlEncode(userKey) .. "&hwid=" .. HttpService:UrlEncode(hwid) .. "&_t=" .. tostring(tick())
 
 local function getData(url)
     if request then 
@@ -75,15 +45,19 @@ local success, data = pcall(function() return HttpService:JSONDecode(res) end)
 if not success or not data or not data.valid then
     local erro = (data and data.error) or "Key Inválida ou bloqueada."
     notify("Eclipse ERRO", erro)
+    print("[Eclipse Debug] Resposta do servidor:", res) 
     return
 end
 
 notify("Eclipse", "Acesso Autorizado! A carregar...")
 
 -- ==========================================
--- 2. CARREGAR SCRIPTS DO MANIFEST
+-- 2. CARREGAR SCRIPTS VIA CLOUDFLARE (OFUSCADO)
 -- ==========================================
-local rawJson = getData(_uManifest)
+-- Agora o Loader pede a lista ao teu Worker, e não ao GitHub diretamente.
+local SCRIPT_LIST_URL = "https://eclipse-proxy.andrepequeno31.workers.dev/api/manifest"
+local rawJson = getData(SCRIPT_LIST_URL)
+
 if not rawJson then
     notify("Eclipse ERRO", "Falha ao carregar a lista de scripts.")
     return
@@ -98,7 +72,7 @@ end
 -- ==========================================
 -- 3. WINDUI LOADER
 -- ==========================================
-local WindUI = loadstring(game:HttpGet(_uWindUI))()
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
 if not WindUI then return warn("[Eclipse Hub] WindUI falhou.") end
 
 local Games = {}
@@ -128,7 +102,7 @@ local Window = WindUI:CreateWindow({
         Enabled = true,
         Name = player.DisplayName,
         Icon = "rbxthumb://type=AvatarHeadShot&id=" .. player.UserId .. "&w=150&h=150",
-        Callback = function() print("Perfil clicado") end
+        Callback = function() print("Perfil clicado, https://discord.gg/76tHHGBrfz") end
     }
 })
 
