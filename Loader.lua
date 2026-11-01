@@ -60,10 +60,14 @@ notify("Eclipse", "Acesso Autorizado! A carregar...")
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
 if not WindUI then return warn("[Eclipse Hub] WindUI falhou.") end
 
+-- AQUI ESTÁ A CORREÇÃO DO LINK DO AIRFLOW:
 local GameScripts: {[string]: {{name: string, url: string}}} = {
     ["99 Nights in the Forest"] = {
         { name = "Cookie Hub", url = "https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/Script/99%20Nights%20in%20the%20Forest/Cookie%20Hub" },
         { name = "Voidware", url = "https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/Script/99%20Nights%20in%20the%20Forest/Voidware" }
+    },
+    ["Blox Strike"] = {
+        { name = "Airflow", url = "https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/Script/BloxStrike/Airflow" }
     }
 }
 
