@@ -1,38 +1,30 @@
 {
-  "9534705677": {
-    "name": "Sniper Arena",
-    "urls": ["https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/Script/Sniper%20Arena"]
-  },
-  "6035872082": {
-    "name": "Rivals",
-    "urls": [""]
-  },
-  "10563114921": {
-    "name": "Steal An Egg",
-    "urls": ["https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/Script/Steal%20an%20Egg"]
-  },
-  "66654135": {
-    "name": "Murder Mystery 2",
-    "urls": ["https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/Script/Murder%20Mystery%202"]
-  },
-  "7018190066": {
-    "name": "Dead Rails",
-    "urls": ["https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/Script/Dead%20Rails"]
-  },
-  "7633926880": {
-    "name": "Blox Strike",
-    "urls": [""]
-  },
-  "4777817887": {
-    "name": "Blade Ball",
-    "urls": ["https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/Script/Blade%20Ball"]
-  },
-  "1686885941": {
-    "name": "99 Nights in the Forest",
-    "urls": ["https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/Script/99%20Nights%20in%20the%20Forest%20"]
-  },
-  "2440500124": {
-    "name": "Doors",
-    "urls": ["https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/Script/Doors%20"]
-  }
+  "99 Nights in the Forest": [
+    {
+      "name": "Cookie Hub",
+      "url": "https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/Script/99%20Nights%20in%20the%20Forest/Cookie%20Hub"
+    },
+    {
+      "name": "Voidware",
+      "url": "https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/Script/99%20Nights%20in%20the%20Forest/Voidware"
+    }
+  ],
+  "Blox Strike": [
+    {
+      "name": "Airflow",
+      "url": "https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/Script/BloxStrike/Airflow"
+    }
+  ],
+  "Dead Rails": [
+    {
+      "name": "Nauru Hub",
+      "url": "https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/Script/Dead%20Rails/Nauru%20Hub"
+    }
+  ],
+  "Doors": [],
+  "Blade Ball": [],
+  "Murder Mystery 2": [],
+  "Steal An Egg": [],
+  "Rivals": [],
+  "Sniper Arena": []
 }
