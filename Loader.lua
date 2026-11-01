@@ -109,9 +109,9 @@ table.sort(Games, function(a, b)
 end)
 
 local Window = WindUI:CreateWindow({
-    Title = "Eclipse Hub",
+    Title = "larp :: Game Loader",
     Icon = "layers",
-    Author = "@By_Andryx",
+    Author = "@ronzy.exe",
     Folder = "larpGameLoader",
     Size = UDim2.fromOffset(680, 500),
     Transparent = true,
@@ -196,4 +196,4 @@ for _, gameName in ipairs(Games) do
     end
 end
 
-LogTab:Paragraph({ Title = "Log", Desc = 
+LogTab:Paragraph({ Title = "Log", Desc = "Join our discord: https://discord.gg/76tHHGBrfz\nMade by @ronzy.exe on discord" })
