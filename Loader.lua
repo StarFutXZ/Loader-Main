@@ -21,40 +21,13 @@ end
 userKey = string.gsub(userKey, "[%s\"']", "")
 notify("Eclipse", "A validar Key e Dispositivo...")
 
--- Função robusta para obter o HWID do dispositivo (com fallback para contas)
-local function getDeviceHWID()
-    local hwid = nil
+-- Para máxima estabilidade, usamos o UserId do Roblox.
+-- O UserId nunca muda, evitando o erro "HWID não corresponde" ao reabrir o jogo.
+-- Se quiseres amarrar ao PC físico (e o teu executor suportar), podes trocar para gethwid().
+local hwid = "USER_" .. tostring(player.UserId)
 
-    -- 1. Tenta a função global padrão (Wave, AWP, etc)
-    if gethwid then
-        local ok, result = pcall(gethwid)
-        if ok and type(result) == "string" and #result > 0 then hwid = result end
-    end
-
-    -- 2. Tenta Synapse X
-    if not hwid and syn and syn.get_hwid then
-        local ok, result = pcall(syn.get_hwid)
-        if ok and type(result) == "string" and #result > 0 then hwid = result end
-    end
-
-    -- 3. Tenta Krnl
-    if not hwid and krnl_gethwid then
-        local ok, result = pcall(krnl_gethwid)
-        if ok and type(result) == "string" and #result > 0 then hwid = result end
-    end
-
-    -- 4. Fallback final: usa o UserId do jogador
-    if not hwid then
-        hwid = "USER_" .. tostring(player.UserId)
-    end
-
-    return hwid
-end
-
-local hwid = getDeviceHWID()
-
--- URL do teu Worker da Cloudflare
-local API_URL = "https://eclipse-proxy.andrepequeno31.workers.dev/api/validate?key=" .. HttpService:UrlEncode(userKey) .. "&hwid=" .. HttpService:UrlEncode(hwid)
+-- URL do teu Worker da Cloudflare (com anti-cache _t=tick)
+local API_URL = "https://eclipse-proxy.andrepequeno31.workers.dev/api/validate?key=" .. HttpService:UrlEncode(userKey) .. "&hwid=" .. HttpService:UrlEncode(hwid) .. "&_t=" .. tostring(tick())
 
 local function getData(url)
     if request then 
@@ -74,9 +47,11 @@ end
 
 local success, data = pcall(function() return HttpService:JSONDecode(res) end)
 
+-- DEBUG: Se falhar, abre a consola (F9) para veres o erro exato
 if not success or not data or not data.valid then
     local erro = (data and data.error) or "Key Inválida ou bloqueada."
     notify("Eclipse ERRO", erro)
+    print("[Eclipse Debug] Resposta do servidor:", res) 
     return
 end
 
