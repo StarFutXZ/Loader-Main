@@ -109,9 +109,9 @@ table.sort(Games, function(a, b)
 end)
 
 local Window = WindUI:CreateWindow({
-    Title = "larp :: Game Loader",
+    Title = "Eclipse Hub",
     Icon = "layers",
-    Author = "@ronzy.exe",
+    Author = "@By_Andryx",
     Folder = "larpGameLoader",
     Size = UDim2.fromOffset(680, 500),
     Transparent = true,
