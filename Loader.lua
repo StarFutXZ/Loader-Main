@@ -27,8 +27,8 @@ local function _d(data)
     end))
 end
 
--- Token: EclipseLoader2024! (COM O ! INCLUÍDO)
-local LOADER_TOKEN = _d("RWNsaXBzZUxvYWRlcjIwMjQh")
+-- Token: EclipseLoader2024 (Exatamente igual ao Cloudflare, SEM O !)
+local LOADER_TOKEN = _d("RWNsaXBzZUxvYWRlcjIwMjQ=")
 
 -- ==========================================
 -- 1. SISTEMA DE SEGURANÇA (KEY + HWID)
@@ -43,7 +43,6 @@ end
 userKey = string.gsub(userKey, "[%s\"']", "")
 notify("Eclipse", "A validar Key e Dispositivo...")
 
--- Usamos o UserId do Roblox para evitar falhas de HWID
 local hwid = "USER_" .. tostring(player.UserId)
 local API_URL = "https://eclipse-proxy.andrepequeno31.workers.dev/api/validate?key=" .. HttpService:UrlEncode(userKey) .. "&hwid=" .. HttpService:UrlEncode(hwid) .. "&_t=" .. tostring(tick())
 
@@ -84,17 +83,16 @@ if not rawJson then
     return
 end
 
--- Se o Cloudflare bloquear o acesso, o rawJson vai ser "ACESSO NEGADO"
 if string.find(rawJson, "ACESSO NEGADO") then
-    notify("Eclipse ERRO", "Token inválido. Contacta o suporte.")
-    print("[Eclipse Debug] O Cloudflare bloqueou o acesso. Verifica o LOADER_SECRET no Worker.")
+    notify("Eclipse ERRO", "Token inválido. Verifica o Cloudflare.")
+    print("[Eclipse Debug] Token errado. O Cloudflare diz: " .. rawJson)
     return
 end
 
 local parseSuccess, GameScripts = pcall(function() return HttpService:JSONDecode(rawJson) end)
 if not parseSuccess or type(GameScripts) ~= "table" then
     notify("Eclipse ERRO", "Erro no formato da lista de scripts.")
-    print("[Eclipse Debug] O Cloudflare devolveu isto:", rawJson) 
+    print("[Eclipse Debug] Resposta: " .. rawJson)
     return
 end
 
