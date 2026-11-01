@@ -21,10 +21,7 @@ end
 userKey = string.gsub(userKey, "[%s\"']", "")
 notify("Eclipse", "A validar Key e Dispositivo...")
 
--- Usamos o UserId do Roblox para evitar falhas de HWID entre execuções
 local hwid = "USER_" .. tostring(player.UserId)
-
--- URL do teu Worker da Cloudflare (com anti-cache _t=tick)
 local API_URL = "https://eclipse-proxy.andrepequeno31.workers.dev/api/validate?key=" .. HttpService:UrlEncode(userKey) .. "&hwid=" .. HttpService:UrlEncode(hwid) .. "&_t=" .. tostring(tick())
 
 local function getData(url)
@@ -55,29 +52,32 @@ end
 notify("Eclipse", "Acesso Autorizado! A carregar...")
 
 -- ==========================================
--- 2. WINDUI LOADER
+-- 2. CARREGAR SCRIPTS DO JSON EXTERNO
+-- ==========================================
+local SCRIPT_LIST_URL = "https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/scripts.json"
+local rawJson = getData(SCRIPT_LIST_URL)
+
+if not rawJson then
+    notify("Eclipse ERRO", "Falha ao carregar a lista de scripts.")
+    return
+end
+
+local parseSuccess, GameScripts = pcall(function() return HttpService:JSONDecode(rawJson) end)
+if not parseSuccess or type(GameScripts) ~= "table" then
+    notify("Eclipse ERRO", "Erro no formato da lista de scripts.")
+    return
+end
+
+-- ==========================================
+-- 3. WINDUI LOADER
 -- ==========================================
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
 if not WindUI then return warn("[Eclipse Hub] WindUI falhou.") end
 
--- SCRIPTS DISPONÍVEIS:
-local GameScripts: {[string]: {{name: string, url: string}}} = {
-    ["99 Nights in the Forest"] = {
-        { name = "Cookie Hub", url = "https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/Script/99%20Nights%20in%20the%20Forest/Cookie%20Hub" },
-        { name = "Voidware", url = "https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/Script/99%20Nights%20in%20the%20Forest/Voidware" }
-    },
-    ["Blox Strike"] = {
-        { name = "Airflow", url = "https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/Script/BloxStrike/Airflow" }
-    },
-    ["Dead Rails"] = {
-        { name = "Nauru Hub", url = "https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/Script/Dead%20Rails/Nauru%20Hub" }
-    }
-}
-
-local Games = {
-    "Doors", "99 Nights in the Forest", "Blade Ball", "Blox Strike",
-    "Dead Rails", "Murder Mystery 2", "Steal An Egg", "Rivals", "Sniper Arena"
-}
+local Games = {}
+for gameName, _ in pairs(GameScripts) do
+    table.insert(Games, gameName)
+end
 
 table.sort(Games, function(a, b)
     local aNum = tonumber(a:sub(1, 1))
@@ -106,7 +106,7 @@ local Window = WindUI:CreateWindow({
 })
 
 -- ==========================================
--- 3. SISTEMA DE EXECUÇÃO DE SCRIPTS
+-- 4. SISTEMA DE EXECUÇÃO DE SCRIPTS
 -- ==========================================
 local LoadedScripts: {[string]: thread} = {}
 local FetchedCache: {[string]: string} = {}
@@ -135,7 +135,7 @@ local function executeScript(scriptName: string, url: string): (boolean, string?
 end
 
 -- ==========================================
--- 4. INTERFACE E LOGS
+-- 5. INTERFACE E LOGS
 -- ==========================================
 local LogTab = Window:Tab({ Title = "Logs", Icon = "scroll-text" })
 local LogBox = LogTab:Paragraph({ Title = "Status", Desc = "Loader inicializado. Key e HWID Validados." })
