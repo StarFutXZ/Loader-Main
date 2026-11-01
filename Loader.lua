@@ -1,14 +1,15 @@
 --!strict
--- [[ WindUI Game Loader — Key System Integrated ]]
+-- [[ WindUI Game Loader — Secure API + HWID System ]]
 
 local HttpService = game:GetService("HttpService")
+local player = game.Players.LocalPlayer
 
 local function notify(title, text)
     pcall(function() game.StarterGui:SetCore("SendNotification", { Title = title, Text = text, Duration = 5 }) end)
 end
 
 -- ==========================================
--- 1. SISTEMA DE KEY (Do Loader Antigo)
+-- 1. SISTEMA DE SEGURANÇA (KEY + HWID)
 -- ==========================================
 local userKey = getgenv().Key or _G.Key
 
@@ -18,77 +19,42 @@ if not userKey or userKey == "" then
 end
 
 userKey = string.gsub(userKey, "[%s\"']", "")
+notify("Eclipse", "A validar Key e Dispositivo...")
 
-local _c1 = {104, 116, 116, 112, 115, 58, 47, 47, 114, 97, 119, 46, 103, 105, 116, 104, 117, 98, 117, 115, 101, 114, 99, 111, 110, 116, 101, 110, 116, 46, 99, 111, 109, 47, 83, 116, 97, 114, 70, 117, 116, 88, 90, 47, 76, 111, 97, 100, 101, 114, 45, 77, 97, 105, 110, 47, 114, 101, 102, 115, 47, 104, 101, 97, 100, 115, 47, 109, 97, 105, 110, 47, 115, 101, 99, 117, 114, 101, 95, 107, 101, 121, 115, 46, 106, 115, 111, 110}
+-- Função robusta para obter o HWID do dispositivo (com fallback para contas)
+local function getDeviceHWID()
+    local hwid = nil
 
-local function decodeLink(bytes)
-    local t = {}
-    for _, b in ipairs(bytes) do t[#t+1] = string.char(b) end
-    return table.concat(t)
-end
-
-local URL_KEYS = decodeLink(_c1)
-
-local function getSHA256(str)
-    local band = bit32.band
-    local bxor = bit32.bxor
-    local rrotate = bit32.rrotate
-    local rshift = bit32.rshift
-    local lshift = bit32.lshift
-
-    local K = {
-        0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
-        0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
-        0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
-        0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
-        0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
-        0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
-        0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
-        0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
-    }
-    local H = {0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19}
-    
-    local msg = {str:byte(1, -1)}
-    local bitLen = #msg * 8
-    table.insert(msg, 0x80)
-    while (#msg % 64) ~= 56 do table.insert(msg, 0) end
-    for i = 8, 1, -1 do table.insert(msg, band(rshift(bitLen, (i-1)*8), 0xFF)) end
-
-    for chunkStart = 1, #msg, 64 do
-        local w = {}
-        for i = 1, 16 do w[i] = lshift(msg[chunkStart + (i-1)*4], 24) + lshift(msg[chunkStart + (i-1)*4 + 1], 16) + lshift(msg[chunkStart + (i-1)*4 + 2], 8) + msg[chunkStart + (i-1)*4 + 3] end
-        for i = 17, 64 do
-            local s0 = bxor(rrotate(w[i-15], 7), rrotate(w[i-15], 18), rshift(w[i-15], 3))
-            local s1 = bxor(rrotate(w[i-2], 17), rrotate(w[i-2], 19), rshift(w[i-2], 10))
-            w[i] = band(w[i-16] + s0 + w[i-7] + s1, 0xFFFFFFFF)
-        end
-        
-        local a, b, c, d, e, f, g, h = H[1], H[2], H[3], H[4], H[5], H[6], H[7], H[8]
-        
-        for i = 1, 64 do
-            local S1 = bxor(rrotate(e, 6), rrotate(e, 11), rrotate(e, 25))
-            local ch = bxor(band(e, f), band(bit32.bnot(e), g))
-            local temp1 = band(h + S1 + ch + K[i] + w[i], 0xFFFFFFFF)
-            local S0 = bxor(rrotate(a, 2), rrotate(a, 13), rrotate(a, 22))
-            local maj = bxor(band(a, b), band(a, c), band(b, c))
-            local temp2 = band(S0 + maj, 0xFFFFFFFF)
-            
-            h = g; g = f; f = e; e = band(d + temp1, 0xFFFFFFFF)
-            d = c; c = b; b = a; a = band(temp1 + temp2, 0xFFFFFFFF)
-        end
-        
-        H[1] = band(H[1] + a, 0xFFFFFFFF); H[2] = band(H[2] + b, 0xFFFFFFFF)
-        H[3] = band(H[3] + c, 0xFFFFFFFF); H[4] = band(H[4] + d, 0xFFFFFFFF)
-        H[5] = band(H[5] + e, 0xFFFFFFFF); H[6] = band(H[6] + f, 0xFFFFFFFF)
-        H[7] = band(H[7] + g, 0xFFFFFFFF); H[8] = band(H[8] + h, 0xFFFFFFFF)
+    -- 1. Tenta a função global padrão (Wave, AWP, etc)
+    if gethwid then
+        local ok, result = pcall(gethwid)
+        if ok and type(result) == "string" and #result > 0 then hwid = result end
     end
 
-    local hash = ""
-    for i = 1, 8 do hash = hash .. string.format("%08x", H[i]) end
-    return hash
+    -- 2. Tenta Synapse X
+    if not hwid and syn and syn.get_hwid then
+        local ok, result = pcall(syn.get_hwid)
+        if ok and type(result) == "string" and #result > 0 then hwid = result end
+    end
+
+    -- 3. Tenta Krnl
+    if not hwid and krnl_gethwid then
+        local ok, result = pcall(krnl_gethwid)
+        if ok and type(result) == "string" and #result > 0 then hwid = result end
+    end
+
+    -- 4. Fallback final: usa o UserId do jogador
+    if not hwid then
+        hwid = "USER_" .. tostring(player.UserId)
+    end
+
+    return hwid
 end
 
-local keyHash = getSHA256(userKey)
+local hwid = getDeviceHWID()
+
+-- URL do teu Worker da Cloudflare
+local API_URL = "https://eclipse-proxy.andrepequeno31.workers.dev/api/validate?key=" .. HttpService:UrlEncode(userKey) .. "&hwid=" .. HttpService:UrlEncode(hwid)
 
 local function getData(url)
     if request then 
@@ -100,30 +66,21 @@ local function getData(url)
     return nil
 end
 
-local res = getData(URL_KEYS)
+local res = getData(API_URL)
 if not res then
     notify("Eclipse ERRO", "Erro ao ligar ao servidor.")
     return
 end
 
-local data = HttpService:JSONDecode(res)
-local isValid = false
+local success, data = pcall(function() return HttpService:JSONDecode(res) end)
 
-if data and data.hashes then
-    for _, h in ipairs(data.hashes) do
-        if h == keyHash then
-            isValid = true
-            break
-        end
-    end
-end
-
-if not isValid then
-    notify("Eclipse ERRO", "Key Invalida.")
+if not success or not data or not data.valid then
+    local erro = (data and data.error) or "Key Inválida ou bloqueada."
+    notify("Eclipse ERRO", erro)
     return
 end
 
-notify("Eclipse", "Key OK! A carregar...")
+notify("Eclipse", "Acesso Autorizado! A carregar...")
 
 -- ==========================================
 -- 2. WINDUI LOADER
@@ -163,12 +120,15 @@ local Window = WindUI:CreateWindow({
     HasOutline = true,
     User = {
         Enabled = true,
-        Name = game.Players.LocalPlayer.DisplayName,
-        Icon = "rbxthumb://type=AvatarHeadShot&id=" .. game.Players.LocalPlayer.UserId .. "&w=150&h=150",
+        Name = player.DisplayName,
+        Icon = "rbxthumb://type=AvatarHeadShot&id=" .. player.UserId .. "&w=150&h=150",
         Callback = function() print("Perfil clicado, https://discord.gg/76tHHGBrfz") end
     }
 })
 
+-- ==========================================
+-- 3. SISTEMA DE EXECUÇÃO DE SCRIPTS
+-- ==========================================
 local LoadedScripts: {[string]: thread} = {}
 local FetchedCache: {[string]: string} = {}
 
@@ -195,8 +155,11 @@ local function executeScript(scriptName: string, url: string): (boolean, string?
     return true, nil
 end
 
+-- ==========================================
+-- 4. INTERFACE E LOGS
+-- ==========================================
 local LogTab = Window:Tab({ Title = "Logs", Icon = "scroll-text" })
-local LogBox = LogTab:Paragraph({ Title = "Status", Desc = "Loader inicializado. Key Validada." })
+local LogBox = LogTab:Paragraph({ Title = "Status", Desc = "Loader inicializado. Key e HWID Validados." })
 
 local logLines: {string} = {}
 local function log(msg: string)
