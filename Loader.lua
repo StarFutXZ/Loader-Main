@@ -43,7 +43,10 @@ end
 userKey = string.gsub(userKey, "[%s\"']", "")
 notify("Eclipse", "A validar Key e Dispositivo...")
 
+-- Usamos o UserId do Roblox para evitar falhas de HWID entre execuções
 local hwid = "USER_" .. tostring(player.UserId)
+
+-- URL do teu Worker da Cloudflare
 local API_URL = "https://eclipse-proxy.andrepequeno31.workers.dev/api/validate?key=" .. HttpService:UrlEncode(userKey) .. "&hwid=" .. HttpService:UrlEncode(hwid) .. "&_t=" .. tostring(tick())
 
 local function getData(url)
@@ -56,11 +59,9 @@ local function getData(url)
     return nil
 end
 
-print("[Eclipse Debug] A validar Key...")
 local res = getData(API_URL)
 if not res then
     notify("Eclipse ERRO", "Erro ao ligar ao servidor.")
-    print("[Eclipse Debug] Falha na API de validação.")
     return
 end
 
@@ -69,7 +70,6 @@ local success, data = pcall(function() return HttpService:JSONDecode(res) end)
 if not success or not data or not data.valid then
     local erro = (data and data.error) or "Key Inválida ou bloqueada."
     notify("Eclipse ERRO", erro)
-    print("[Eclipse Debug] Erro na Key:", res)
     return
 end
 
@@ -79,16 +79,12 @@ notify("Eclipse", "Acesso Autorizado! A carregar...")
 -- 2. CARREGAR SCRIPTS VIA CLOUDFLARE (COM TOKEN)
 -- ==========================================
 local SCRIPT_LIST_URL = "https://eclipse-proxy.andrepequeno31.workers.dev/api/manifest?token=" .. LOADER_TOKEN
-print("[Eclipse Debug] A pedir Manifesto: ", SCRIPT_LIST_URL)
-
 local rawJson = getData(SCRIPT_LIST_URL)
 
 if not rawJson then
     notify("Eclipse ERRO", "Falha ao carregar a lista de scripts.")
     return
 end
-
-print("[Eclipse Debug] Resposta do Manifesto: ", rawJson) -- VÊ ISTO NO F9 SE DER ERRO
 
 local parseSuccess, GameScripts = pcall(function() return HttpService:JSONDecode(rawJson) end)
 if not parseSuccess or type(GameScripts) ~= "table" then
@@ -144,6 +140,7 @@ local function executeScript(scriptName: string, url: string): (boolean, string?
     local cleanUrl = string.gsub(url, "%s+$", "")
     
     if not FetchedCache[scriptName] then
+        -- O link já vem com o token incluído do Cloudflare
         local ok, result = pcall(function() return game:HttpGet(cleanUrl, true) end)
         if not ok or type(result) ~= "string" or #result < 8 then
             return false, "Falha no download"
@@ -199,7 +196,6 @@ for _, gameName in ipairs(Games) do
             })
         end
     else
-        -- ERRO DE SINTAXE CORRIGIDO AQUI (Title = em vez de Title:)
         Tab:Paragraph({ Title = "Nenhum script", Desc = "Os scripts para " .. gameName .. " serão injetados aqui." })
     end
 end
