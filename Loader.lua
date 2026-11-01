@@ -9,6 +9,28 @@ local function notify(title, text)
 end
 
 -- ==========================================
+-- OFUSCAÇÃO DO TOKEN (BASE64)
+-- ==========================================
+local B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+local function _d(data)
+    data = string.gsub(data, '[^' .. B64 .. '=]', '')
+    return (data:gsub('.', function(x)
+        if (x == '=') then return '' end
+        local r, f = '', (B64:find(x) - 1)
+        for i = 6, 1, -1 do r = r .. (f % 2^i - f % 2^(i-1) > 0 and '1' or '0') end
+        return r;
+    end):gsub('%d%d%d?%d?%d?%d?%d?%d?', function(x)
+        if (#x ~= 8) then return '' end
+        local c = 0
+        for i = 1, 8 do c = c + (x:sub(i, i) == '1' and 2^(8-i) or 0) end
+        return string.char(c)
+    end))
+end
+
+-- O Token "EclipseLoader2024!" está aqui escondido em Base64
+local LOADER_TOKEN = _d("RWNsaXBzZUxvYWRlcjIwMjQh")
+
+-- ==========================================
 -- 1. SISTEMA DE SEGURANÇA (KEY + HWID)
 -- ==========================================
 local userKey = getgenv().Key or _G.Key
@@ -45,17 +67,15 @@ local success, data = pcall(function() return HttpService:JSONDecode(res) end)
 if not success or not data or not data.valid then
     local erro = (data and data.error) or "Key Inválida ou bloqueada."
     notify("Eclipse ERRO", erro)
-    print("[Eclipse Debug] Resposta do servidor:", res) 
     return
 end
 
 notify("Eclipse", "Acesso Autorizado! A carregar...")
 
 -- ==========================================
--- 2. CARREGAR SCRIPTS VIA CLOUDFLARE (OFUSCADO)
+-- 2. CARREGAR SCRIPTS VIA CLOUDFLARE (COM TOKEN)
 -- ==========================================
--- Agora o Loader pede a lista ao teu Worker, e não ao GitHub diretamente.
-local SCRIPT_LIST_URL = "https://eclipse-proxy.andrepequeno31.workers.dev/api/manifest"
+local SCRIPT_LIST_URL = "https://eclipse-proxy.andrepequeno31.workers.dev/api/manifest?token=" .. LOADER_TOKEN
 local rawJson = getData(SCRIPT_LIST_URL)
 
 if not rawJson then
@@ -117,6 +137,7 @@ local function executeScript(scriptName: string, url: string): (boolean, string?
     local cleanUrl = string.gsub(url, "%s+$", "")
     
     if not FetchedCache[scriptName] then
+        -- O link já vem com o token incluído do Cloudflare
         local ok, result = pcall(function() return game:HttpGet(cleanUrl, true) end)
         if not ok or type(result) ~= "string" or #result < 8 then
             return false, "Falha no download"
@@ -172,7 +193,7 @@ for _, gameName in ipairs(Games) do
             })
         end
     else
-        Tab:Paragraph({ Title = "Nenhum script", Desc = "Os scripts para " .. gameName .. " serão injetados aqui." })
+        Tab:Paragraph({ Title: "Nenhum script", Desc = "Os scripts para " .. gameName .. " serão injetados aqui." })
     end
 end
 
