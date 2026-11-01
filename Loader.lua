@@ -27,7 +27,7 @@ local function _d(data)
     end))
 end
 
--- Token: EclipseLoader2024 (SEM O !)
+-- Token: EclipseLoader2024
 local LOADER_TOKEN = _d("RWNsaXBzZUxvYWRlcjIwMjQ=")
 
 -- ==========================================
@@ -35,30 +35,21 @@ local LOADER_TOKEN = _d("RWNsaXBzZUxvYWRlcjIwMjQ=")
 -- ==========================================
 local function getDeviceHWID()
     local hwid = nil
-
-    -- Tenta a função global padrão (Wave, AWP, etc)
     if gethwid then
         local ok, result = pcall(gethwid)
         if ok and type(result) == "string" and #result > 0 then hwid = result end
     end
-
-    -- Tenta Synapse X
     if not hwid and syn and syn.get_hwid then
         local ok, result = pcall(syn.get_hwid)
         if ok and type(result) == "string" and #result > 0 then hwid = result end
     end
-
-    -- Tenta Krnl
     if not hwid and krnl_gethwid then
         local ok, result = pcall(krnl_gethwid)
         if ok and type(result) == "string" and #result > 0 then hwid = result end
     end
-
-    -- Fallback final: usa o UserId (só se o executor não suportar HWID)
     if not hwid then
         hwid = "USER_" .. tostring(player.UserId)
     end
-
     return hwid
 end
 
@@ -76,8 +67,6 @@ userKey = string.gsub(userKey, "[%s\"']", "")
 notify("Eclipse", "A validar Key e Dispositivo...")
 
 local hwid = getDeviceHWID()
-print("[Eclipse Debug] O teu HWID é: ", hwid)
-
 local API_URL = "https://eclipse-proxy.andrepequeno31.workers.dev/api/validate?key=" .. HttpService:UrlEncode(userKey) .. "&hwid=" .. HttpService:UrlEncode(hwid) .. "&_t=" .. tostring(tick())
 
 local function getData(url)
@@ -107,7 +96,7 @@ end
 notify("Eclipse", "Acesso Autorizado! A carregar...")
 
 -- ==========================================
--- 2. CARREGAR SCRIPTS VIA CLOUDFLARE (COM TOKEN)
+-- 2. CARREGAR SCRIPTS VIA CLOUDFLARE
 -- ==========================================
 local SCRIPT_LIST_URL = "https://eclipse-proxy.andrepequeno31.workers.dev/api/manifest?token=" .. LOADER_TOKEN
 local rawJson = getData(SCRIPT_LIST_URL)
@@ -166,7 +155,7 @@ local Window = WindUI:CreateWindow({
 })
 
 -- ==========================================
--- 4. SISTEMA DE EXECUÇÃO DE SCRIPTS
+-- 4. SISTEMA DE EXECUÇÃO DE SCRIPTS (COM AUTO-CORREÇÃO)
 -- ==========================================
 local LoadedScripts: {[string]: thread} = {}
 local FetchedCache: {[string]: string} = {}
@@ -180,6 +169,11 @@ local function executeScript(scriptName: string, url: string): (boolean, string?
         if not ok or type(result) ~= "string" or #result < 8 then
             return false, "Falha no download"
         end
+        
+        -- 🔥 CORREÇÃO MÁGICA AQUI 🔥
+        -- Troca o caractere "…" (U+2026) por "..." (três pontos normais)
+        result = string.gsub(result, "…", "...")
+        
         FetchedCache[scriptName] = result
     end
     
