@@ -27,7 +27,7 @@ local function _d(data)
     end))
 end
 
--- Token: EclipseLoader2024!
+-- Token: EclipseLoader2024! (COM O ! INCLUÍDO)
 local LOADER_TOKEN = _d("RWNsaXBzZUxvYWRlcjIwMjQh")
 
 -- ==========================================
@@ -43,10 +43,8 @@ end
 userKey = string.gsub(userKey, "[%s\"']", "")
 notify("Eclipse", "A validar Key e Dispositivo...")
 
--- Usamos o UserId do Roblox para evitar falhas de HWID entre execuções
+-- Usamos o UserId do Roblox para evitar falhas de HWID
 local hwid = "USER_" .. tostring(player.UserId)
-
--- URL do teu Worker da Cloudflare
 local API_URL = "https://eclipse-proxy.andrepequeno31.workers.dev/api/validate?key=" .. HttpService:UrlEncode(userKey) .. "&hwid=" .. HttpService:UrlEncode(hwid) .. "&_t=" .. tostring(tick())
 
 local function getData(url)
@@ -86,9 +84,17 @@ if not rawJson then
     return
 end
 
+-- Se o Cloudflare bloquear o acesso, o rawJson vai ser "ACESSO NEGADO"
+if string.find(rawJson, "ACESSO NEGADO") then
+    notify("Eclipse ERRO", "Token inválido. Contacta o suporte.")
+    print("[Eclipse Debug] O Cloudflare bloqueou o acesso. Verifica o LOADER_SECRET no Worker.")
+    return
+end
+
 local parseSuccess, GameScripts = pcall(function() return HttpService:JSONDecode(rawJson) end)
 if not parseSuccess or type(GameScripts) ~= "table" then
     notify("Eclipse ERRO", "Erro no formato da lista de scripts.")
+    print("[Eclipse Debug] O Cloudflare devolveu isto:", rawJson) 
     return
 end
 
@@ -140,7 +146,6 @@ local function executeScript(scriptName: string, url: string): (boolean, string?
     local cleanUrl = string.gsub(url, "%s+$", "")
     
     if not FetchedCache[scriptName] then
-        -- O link já vem com o token incluído do Cloudflare
         local ok, result = pcall(function() return game:HttpGet(cleanUrl, true) end)
         if not ok or type(result) ~= "string" or #result < 8 then
             return false, "Falha no download"
