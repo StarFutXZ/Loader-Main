@@ -196,4 +196,4 @@ for _, gameName in ipairs(Games) do
     end
 end
 
-LogTab:Paragraph({ Title = "Log", Desc = "Join our discord: https://discord.gg/76tHHGBrfz\nMade by @ronzy.exe on discord" })
+LogTab:Paragraph({ Title = "Log", Desc = 
