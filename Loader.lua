@@ -1,5 +1,5 @@
 --!strict
--- [[ WindUI Game Loader — Secure API + HWID System ]]
+-- [[ Eclipse Hub — Secure API + HWID System ]]
 
 local HttpService = game:GetService("HttpService")
 local player = game.Players.LocalPlayer
@@ -21,9 +21,7 @@ end
 userKey = string.gsub(userKey, "[%s\"']", "")
 notify("Eclipse", "A validar Key e Dispositivo...")
 
--- Para máxima estabilidade, usamos o UserId do Roblox.
--- O UserId nunca muda, evitando o erro "HWID não corresponde" ao reabrir o jogo.
--- Se quiseres amarrar ao PC físico (e o teu executor suportar), podes trocar para gethwid().
+-- Usamos o UserId do Roblox para evitar falhas de HWID entre execuções
 local hwid = "USER_" .. tostring(player.UserId)
 
 -- URL do teu Worker da Cloudflare (com anti-cache _t=tick)
@@ -47,7 +45,6 @@ end
 
 local success, data = pcall(function() return HttpService:JSONDecode(res) end)
 
--- DEBUG: Se falhar, abre a consola (F9) para veres o erro exato
 if not success or not data or not data.valid then
     local erro = (data and data.error) or "Key Inválida ou bloqueada."
     notify("Eclipse ERRO", erro)
@@ -61,7 +58,7 @@ notify("Eclipse", "Acesso Autorizado! A carregar...")
 -- 2. WINDUI LOADER
 -- ==========================================
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
-if not WindUI then return warn("[larp-loader] WindUI falhou.") end
+if not WindUI then return warn("[Eclipse Hub] WindUI falhou.") end
 
 local GameScripts: {[string]: {{name: string, url: string}}} = {
     ["99 Nights in the Forest"] = {
@@ -85,9 +82,9 @@ end)
 
 local Window = WindUI:CreateWindow({
     Title = "Eclipse Hub",
-    Icon = "layers",
+    Icon = "moon",
     Author = "@By_Andryx",
-    Folder = "larpGameLoader",
+    Folder = "EclipseHub",
     Size = UDim2.fromOffset(680, 500),
     Transparent = true,
     Theme = "Dark",
@@ -171,4 +168,4 @@ for _, gameName in ipairs(Games) do
     end
 end
 
-LogTab:Paragraph({ Title = "Log", Desc = "Join our discord: https://discord.gg/76tHHGBrfz\nMade by @ronzy.exe on discord" })
+LogTab:Paragraph({ Title = "Log", Desc = "Join our discord: https://discord.gg/76tHHGBrfz\nMade by @By_Andryx on discord" })
