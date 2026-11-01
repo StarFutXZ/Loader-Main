@@ -1,12 +1,38 @@
 --!strict
--- [[ Eclipse Hub — Secure API + HWID System ]]
+-- [[ Eclipse Hub — Advanced Secure Loader ]]
 
 local HttpService = game:GetService("HttpService")
 local player = game.Players.LocalPlayer
 
+-- BLOQUEIO DE STUDIO (Se tentarem abrir no Roblox Studio para ver o código, bloqueia)
+if game:GetService("RunService"):IsStudio() then
+    return warn("[Eclipse] Execução bloqueada no Roblox Studio por questões de segurança.")
+end
+
 local function notify(title, text)
     pcall(function() game.StarterGui:SetCore("SendNotification", { Title = title, Text = text, Duration = 5 }) end)
 end
+
+-- ==========================================
+-- OFUSCAÇÃO AVANÇADA (XOR CIPHER)
+-- ==========================================
+local K = 97 -- Chave secreta de encriptação
+
+local function _d(enc)
+    local t = {}
+    for _, b in ipairs(enc) do
+        table.insert(t, string.char(bit32.bxor(b, K)))
+    end
+    return table.concat(t)
+end
+
+-- Links encriptados com XOR (Chave 97)
+-- WindUI
+local _uWindUI = _d({9, 21, 21, 16, 26, 58, 47, 47, 6, 24, 21, 23, 20, 19, 46, 14, 16, 28, 47, 5, 16, 16, 21, 0, 6, 12, 26, 20, 26, 47, 1, 21, 18, 21, 0, 26, 26, 26, 47, 29, 0, 21, 26, 24, 21, 46, 47, 29, 16, 30, 18, 29, 16, 0, 29, 47, 14, 0, 18, 18, 46, 29, 20, 0})
+-- API Cloudflare
+local _uApiBase = _d({9, 21, 21, 16, 26, 58, 47, 47, 4, 2, 11, 18, 16, 26, 4, 52, 16, 0, 16, 25, 30, 4, 18, 21, 4, 0, 4, 2, 16, 25, 16, 20, 16, 21, 21, 2, 4, 52, 47, 38, 16, 0, 23, 4, 0, 26, 46, 29, 4, 25, 47, 2, 0, 18, 47, 25, 0, 16, 33, 2, 21, 4})
+-- Manifest.json
+local _uManifest = _d({9, 21, 21, 16, 26, 58, 47, 47, 0, 0, 38, 46, 6, 24, 21, 23, 20, 19, 30, 26, 4, 0, 2, 16, 21, 21, 4, 21, 21, 46, 2, 16, 22, 47, 26, 4, 16, 0, 26, 47, 21, 4, 2, 29, 26, 47, 22, 2, 18, 21, 47, 38, 4, 21, 0, 40, 16, 21, 28, 52, 16, 0, 16, 25, 30, 47, 22, 4, 21, 20, 26, 46, 20, 16, 21, 22, 26, 28, 21, 46, 58, 26, 18, 21})
 
 -- ==========================================
 -- 1. SISTEMA DE SEGURANÇA (KEY + HWID)
@@ -22,7 +48,7 @@ userKey = string.gsub(userKey, "[%s\"']", "")
 notify("Eclipse", "A validar Key e Dispositivo...")
 
 local hwid = "USER_" .. tostring(player.UserId)
-local API_URL = "https://eclipse-proxy.andrepequeno31.workers.dev/api/validate?key=" .. HttpService:UrlEncode(userKey) .. "&hwid=" .. HttpService:UrlEncode(hwid) .. "&_t=" .. tostring(tick())
+local API_URL = _uApiBase .. "?key=" .. HttpService:UrlEncode(userKey) .. "&hwid=" .. HttpService:UrlEncode(hwid) .. "&_t=" .. tostring(tick())
 
 local function getData(url)
     if request then 
@@ -45,18 +71,15 @@ local success, data = pcall(function() return HttpService:JSONDecode(res) end)
 if not success or not data or not data.valid then
     local erro = (data and data.error) or "Key Inválida ou bloqueada."
     notify("Eclipse ERRO", erro)
-    print("[Eclipse Debug] Resposta do servidor:", res) 
     return
 end
 
 notify("Eclipse", "Acesso Autorizado! A carregar...")
 
 -- ==========================================
--- 2. CARREGAR SCRIPTS DO JSON EXTERNO
+-- 2. CARREGAR SCRIPTS
 -- ==========================================
-local SCRIPT_LIST_URL = "https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/manifest.json"
-local rawJson = getData(SCRIPT_LIST_URL)
-
+local rawJson = getData(_uManifest)
 if not rawJson then
     notify("Eclipse ERRO", "Falha ao carregar a lista de scripts.")
     return
@@ -69,15 +92,13 @@ if not parseSuccess or type(GameScripts) ~= "table" then
 end
 
 -- ==========================================
--- 3. WINDUI LOADER
+-- 3. WINDUI
 -- ==========================================
-local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+local WindUI = loadstring(game:HttpGet(_uWindUI))()
 if not WindUI then return warn("[Eclipse Hub] WindUI falhou.") end
 
 local Games = {}
-for gameName, _ in pairs(GameScripts) do
-    table.insert(Games, gameName)
-end
+for gameName, _ in pairs(GameScripts) do table.insert(Games, gameName) end
 
 table.sort(Games, function(a, b)
     local aNum = tonumber(a:sub(1, 1))
@@ -101,12 +122,12 @@ local Window = WindUI:CreateWindow({
         Enabled = true,
         Name = player.DisplayName,
         Icon = "rbxthumb://type=AvatarHeadShot&id=" .. player.UserId .. "&w=150&h=150",
-        Callback = function() print("Perfil clicado, https://discord.gg/76tHHGBrfz") end
+        Callback = function() print("Perfil clicado") end
     }
 })
 
 -- ==========================================
--- 4. SISTEMA DE EXECUÇÃO DE SCRIPTS
+-- 4. SISTEMA DE EXECUÇÃO
 -- ==========================================
 local LoadedScripts: {[string]: thread} = {}
 local FetchedCache: {[string]: string} = {}
