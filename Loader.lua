@@ -1,27 +1,25 @@
---// ===== Eclipse Loader v28.0 (Ofuscado e Corrigido) =====
-local userKey = getgenv().Key or _G.Key
+--!strict
+-- [[ WindUI Game Loader — Key System Integrated ]]
 
-if not userKey or userKey == "" then
-    pcall(function() game.StarterGui:SetCore("SendNotification", { Title = "Eclipse", Text = "ERRO: Nenhuma Key!", Duration = 5 }) end)
-    return
-end
-
-userKey = string.gsub(userKey, "[%s\"']", "")
+local HttpService = game:GetService("HttpService")
 
 local function notify(title, text)
     pcall(function() game.StarterGui:SetCore("SendNotification", { Title = title, Text = text, Duration = 5 }) end)
 end
 
-notify("Eclipse", "A verificar Key...")
+-- ==========================================
+-- 1. SISTEMA DE KEY (Do Loader Antigo)
+-- ==========================================
+local userKey = getgenv().Key or _G.Key
 
--- ==========================================
--- 1. LINKS ESCONDIDOS
--- ==========================================
--- Link do secure_keys.json (Escondido)
+if not userKey or userKey == "" then
+    notify("Eclipse", "ERRO: Nenhuma Key! (getgenv().Key)")
+    return
+end
+
+userKey = string.gsub(userKey, "[%s\"']", "")
+
 local _c1 = {104, 116, 116, 112, 115, 58, 47, 47, 114, 97, 119, 46, 103, 105, 116, 104, 117, 98, 117, 115, 101, 114, 99, 111, 110, 116, 101, 110, 116, 46, 99, 111, 109, 47, 83, 116, 97, 114, 70, 117, 116, 88, 90, 47, 76, 111, 97, 100, 101, 114, 45, 77, 97, 105, 110, 47, 114, 101, 102, 115, 47, 104, 101, 97, 100, 115, 47, 109, 97, 105, 110, 47, 115, 101, 99, 117, 114, 101, 95, 107, 101, 121, 115, 46, 106, 115, 111, 110}
-
--- Link do manifest.json (Escondido)
-local _c2 = {104, 116, 116, 112, 115, 58, 47, 47, 114, 97, 119, 46, 103, 105, 116, 104, 117, 98, 117, 115, 101, 114, 99, 111, 110, 116, 101, 110, 116, 46, 99, 111, 109, 47, 83, 116, 97, 114, 70, 117, 116, 88, 90, 47, 76, 111, 97, 100, 101, 114, 45, 77, 97, 105, 110, 47, 114, 101, 102, 115, 47, 104, 101, 97, 100, 115, 47, 109, 97, 105, 110, 47, 109, 97, 110, 105, 102, 101, 115, 116, 46, 106, 115, 111, 110}
 
 local function decodeLink(bytes)
     local t = {}
@@ -30,11 +28,7 @@ local function decodeLink(bytes)
 end
 
 local URL_KEYS = decodeLink(_c1)
-local URL_MANIFEST = decodeLink(_c2)
 
--- ==========================================
--- 2. FUNÇÃO DE HASH SHA-256
--- ==========================================
 local function getSHA256(str)
     local band = bit32.band
     local bxor = bit32.bxor
@@ -106,17 +100,13 @@ local function getData(url)
     return nil
 end
 
--- ==========================================
--- 3. VALIDA A KEY
--- ==========================================
 local res = getData(URL_KEYS)
-
 if not res then
     notify("Eclipse ERRO", "Erro ao ligar ao servidor.")
     return
 end
 
-local data = game:GetService("HttpService"):JSONDecode(res)
+local data = HttpService:JSONDecode(res)
 local isValid = false
 
 if data and data.hashes then
@@ -128,38 +118,119 @@ if data and data.hashes then
     end
 end
 
--- ==========================================
--- 4. CARREGA O JOGO
--- ==========================================
-if isValid then
-    notify("Eclipse", "Key OK! A carregar...")
-    
-    -- Vai buscar o Manifest (agora com o link escondido)
-    local manifestRes = getData(URL_MANIFEST)
-    
-    if not manifestRes then
-        notify("Eclipse ERRO", "Erro no Manifest.")
-        return
-    end
-
-    local manifest = game:GetService("HttpService"):JSONDecode(manifestRes)
-    local entry = manifest[tostring(game.GameId)]
-    
-    if not entry then
-        notify("Eclipse ERRO", "Jogo nao suportado.")
-        return
-    end
-    
-    notify("Eclipse", "A transferir " .. entry.name)
-    local source = getData(entry.urls[1])
-    
-    if source then
-        local chunk = loadstring(source)
-        if chunk then
-            pcall(chunk)
-            notify("Eclipse", "Menu carregado!")
-        end
-    end
-else
+if not isValid then
     notify("Eclipse ERRO", "Key Invalida.")
+    return
 end
+
+notify("Eclipse", "Key OK! A carregar...")
+
+-- ==========================================
+-- 2. WINDUI LOADER
+-- ==========================================
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+if not WindUI then return warn("[larp-loader] WindUI falhou.") end
+
+local GameScripts: {[string]: {{name: string, url: string}}} = {
+    ["99 Nights in the Forest"] = {
+        { name = "Cookie Hub", url = "https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/Script/99%20Nights%20in%20the%20Forest/Cookie%20Hub" },
+        { name = "Voidware", url = "https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/Script/99%20Nights%20in%20the%20Forest/Voidware" }
+    }
+}
+
+local Games = {
+    "Doors", "99 Nights in the Forest", "Blade Ball", "Blox Strike",
+    "Dead Rails", "Murder Mystery 2", "Steal An Egg", "Rivals", "Sniper Arena"
+}
+
+table.sort(Games, function(a, b)
+    local aNum = tonumber(a:sub(1, 1))
+    local bNum = tonumber(b:sub(1, 1))
+    if aNum and not bNum then return false end
+    if not aNum and bNum then return true end
+    return a:lower() < b:lower()
+end)
+
+local Window = WindUI:CreateWindow({
+    Title = "larp :: Game Loader",
+    Icon = "layers",
+    Author = "@ronzy.exe",
+    Folder = "larpGameLoader",
+    Size = UDim2.fromOffset(680, 500),
+    Transparent = true,
+    Theme = "Dark",
+    SideBarWidth = 200,
+    HasOutline = true,
+    User = {
+        Enabled = true,
+        Name = game.Players.LocalPlayer.DisplayName,
+        Icon = "rbxthumb://type=AvatarHeadShot&id=" .. game.Players.LocalPlayer.UserId .. "&w=150&h=150",
+        Callback = function() print("Perfil clicado, https://discord.gg/76tHHGBrfz") end
+    }
+})
+
+local LoadedScripts: {[string]: thread} = {}
+local FetchedCache: {[string]: string} = {}
+
+local function executeScript(scriptName: string, url: string): (boolean, string?)
+    if LoadedScripts[scriptName] then return false, "Já rodando" end
+    local cleanUrl = string.gsub(url, "%s+$", "")
+    
+    if not FetchedCache[scriptName] then
+        local ok, result = pcall(function() return game:HttpGet(cleanUrl, true) end)
+        if not ok or type(result) ~= "string" or #result < 8 then
+            return false, "Falha no download"
+        end
+        FetchedCache[scriptName] = result
+    end
+    
+    local chunk, compileErr = loadstring(FetchedCache[scriptName], "=" .. scriptName)
+    if not chunk then return false, "Compile: " .. tostring(compileErr) end
+    
+    local co = coroutine.create(chunk)
+    local ok, runErr = coroutine.resume(co)
+    if not ok then return false, "Runtime: " .. tostring(runErr) end
+    
+    LoadedScripts[scriptName] = co
+    return true, nil
+end
+
+local LogTab = Window:Tab({ Title = "Logs", Icon = "scroll-text" })
+local LogBox = LogTab:Paragraph({ Title = "Status", Desc = "Loader inicializado. Key Validada." })
+
+local logLines: {string} = {}
+local function log(msg: string)
+    local stamp = os.date("%H:%M:%S")
+    table.insert(logLines, 1, ("[%s] %s"):format(stamp, msg))
+    while #logLines > 60 do table.remove(logLines) end
+    LogBox:SetDesc(table.concat(logLines, "\n"))
+end
+
+for _, gameName in ipairs(Games) do
+    local Tab = Window:Tab({ Title = gameName, Icon = "gamepad-2" })
+    Tab:Paragraph({ Title = gameName .. " :: Scripts", Desc = "Selecione um script abaixo para injetar no jogo." })
+    
+    local scriptsForGame = GameScripts[gameName]
+    
+    if scriptsForGame and #scriptsForGame > 0 then
+        for _, scriptInfo in ipairs(scriptsForGame) do
+            local btn = Tab:Button({
+                Title = scriptInfo.name,
+                Desc = "○ parado (Clique para executar)",
+                Callback = function()
+                    task.spawn(function()
+                        local ok, err = executeScript(scriptInfo.name, scriptInfo.url)
+                        log(ok and ("OK: " .. scriptInfo.name) or ("ERRO: " .. tostring(err)))
+                        if btn then
+                            btn:SetDesc(ok and "● rodando" or "○ erro de execução")
+                        end
+                    end)
+                end,
+            })
+        end
+    else
+        Tab:Paragraph({ Title = "Nenhum script", Desc = "Os scripts para " .. gameName .. " serão injetados aqui." })
+    end
+end
+
+LogTab:Paragraph({ Title = "Log", Desc = "Join our discord: https://discord.gg/76tHHGBrfz\nMade by @ronzy.exe on discord" })
