@@ -54,7 +54,7 @@ notify("Eclipse", "Acesso Autorizado! A carregar...")
 -- ==========================================
 -- 2. CARREGAR SCRIPTS DO JSON EXTERNO
 -- ==========================================
-local SCRIPT_LIST_URL = "https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/scripts.json"
+local SCRIPT_LIST_URL = "https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/manifest.json"
 local rawJson = getData(SCRIPT_LIST_URL)
 
 if not rawJson then
