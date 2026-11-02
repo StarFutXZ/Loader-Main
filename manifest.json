@@ -37,10 +37,15 @@
       "url": "https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/Script/Dead%20Rails/Nauru%20Hub"
     }
   ],
+  "Rivals": [
+    {
+      "name": "AntiBrain",
+      "url": "https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/Script/Rivals/AntiBrain"
+    }
+  ],
   "Doors": [],
   "Blade Ball": [],
   "Murder Mystery 2": [],
   "Steal An Egg": [],
-  "Rivals": [],
   "Sniper Arena": []
 }
