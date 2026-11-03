@@ -1,1 +1,1 @@
-loadstring(game:HttpGet("https://doitenroi.win/paste/g4Skft/raw"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/amazson/zaml/refs/heads/main/bloxstrike.lua"))()
