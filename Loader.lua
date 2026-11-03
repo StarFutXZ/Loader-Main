@@ -1,5 +1,5 @@
 --!strict
--- [[ Eclipse Hub — Secure API + HWID System + Auto Execute ]]
+-- [[ Eclipse Hub — Secure API + HWID System + Auto Execute + Favorites ]]
 
 local HttpService = game:GetService("HttpService")
 local player = game.Players.LocalPlayer
@@ -197,11 +197,12 @@ local function log(msg: string)
 end
 
 -- ==========================================
--- 6. SISTEMA DE AUTO EXECUTE (DROPDOWN)
+-- 6. SISTEMA DE AUTO EXECUTE (COM FICHEIRO)
 -- ==========================================
 local AutoExecFile = "EclipseHub_AutoExec.json"
 local autoExecData = { enabled = false, game = "None", script = "None", url = "None" }
 
+-- Tenta ler do ficheiro local do utilizador
 if isfile and isfile(AutoExecFile) then
     local ok, content = pcall(readfile, AutoExecFile)
     if ok and content then
@@ -213,6 +214,7 @@ if isfile and isfile(AutoExecFile) then
 end
 
 local function saveAutoExec()
+    -- Tenta guardar no ficheiro local do utilizador
     if writefile then
         pcall(function()
             writefile(AutoExecFile, HttpService:JSONEncode(autoExecData))
@@ -220,7 +222,6 @@ local function saveAutoExec()
     end
 end
 
--- Criar as opções encurtadas para o Dropdown
 local AutoExecOptions = { "None" }
 local optionMap = {}
 
@@ -230,7 +231,6 @@ for _, gameName in ipairs(Games) do
         for _, scriptInfo in ipairs(scriptsForGame) do
             local shortGame = #gameName > 10 and string.sub(gameName, 1, 8) .. ".." or gameName
             local displayStr = scriptInfo.name .. " (" .. shortGame .. ")"
-            
             table.insert(AutoExecOptions, displayStr)
             optionMap[displayStr] = { game = gameName, script = scriptInfo.name, url = scriptInfo.url }
         end
@@ -274,7 +274,73 @@ SettingsTab:Dropdown({
     end
 })
 
--- Abas dos Jogos
+-- ==========================================
+-- 7. SISTEMA DE FAVORITOS (COM FICHEIRO)
+-- ==========================================
+local FavsFile = "EclipseHub_Favs.json"
+local favoritesData = {}
+
+if isfile and isfile(FavsFile) then
+    local ok, content = pcall(readfile, FavsFile)
+    if ok and content then
+        local parsedOk, parsedData = pcall(function() return HttpService:JSONDecode(content) end)
+        if parsedOk and type(parsedData) == "table" then
+            favoritesData = parsedData
+        end
+    end
+end
+
+local function saveFavorites()
+    if writefile then
+        pcall(function()
+            writefile(FavsFile, HttpService:JSONEncode(favoritesData))
+        end)
+    end
+end
+
+local function getFavKey(game, script)
+    return game .. "|" .. script
+end
+
+-- Criar a Aba de Favoritos
+local FavTab = Window:Tab({ Title = "Favoritos", Icon = "star" })
+FavTab:Paragraph({ Title = "Os teus Favoritos", Desc = "Scripts que marcaste com uma estrela." })
+local favContainer = FavTab:Section({ Title = "Lista" })
+
+local function refreshFavoritesUI()
+    if favContainer and favContainer.Container then
+        for _, child in pairs(favContainer.Container:GetChildren()) do
+            if child:IsA("Frame") or child:IsA("TextButton") or child:IsA("TextLabel") then
+                child:Destroy()
+            end
+        end
+    end
+
+    local count = 0
+    for _, data in pairs(favoritesData) do
+        count = count + 1
+        favContainer:Button({
+            Title = data.name .. " (" .. data.game .. ")",
+            Desc = "Clique para executar.",
+            Callback = function()
+                task.spawn(function()
+                    local ok, err = executeScript(data.name, data.url)
+                    log(ok and ("FAV OK: " .. data.name) or ("FAV ERRO: " .. tostring(err)))
+                end)
+            end,
+        })
+    end
+
+    if count == 0 then
+        favContainer:Paragraph({ Title = "Vazio", Desc = "Vai às abas dos jogos e adiciona scripts aos favoritos." })
+    end
+end
+
+refreshFavoritesUI()
+
+-- ==========================================
+-- 8. ABAS DOS JOGOS
+-- ==========================================
 for _, gameName in ipairs(Games) do
     local Tab = Window:Tab({ Title = gameName, Icon = "gamepad-2" })
     Tab:Paragraph({ Title = gameName .. " :: Scripts", Desc = "Selecione um script abaixo para injetar no jogo." })
@@ -283,6 +349,7 @@ for _, gameName in ipairs(Games) do
     
     if scriptsForGame and #scriptsForGame > 0 then
         for _, scriptInfo in ipairs(scriptsForGame) do
+            
             local btn = Tab:Button({
                 Title = scriptInfo.name,
                 Desc = "○ parado (Clique para executar)",
@@ -296,6 +363,24 @@ for _, gameName in ipairs(Games) do
                     end)
                 end,
             })
+
+            local fKey = getFavKey(gameName, scriptInfo.name)
+            local isFav = favoritesData[fKey] ~= nil
+
+            Tab:Toggle({
+                Title = "⭐ Favoritar (" .. scriptInfo.name .. ")",
+                Desc = "Adiciona este script à aba de Favoritos.",
+                Value = isFav,
+                Callback = function(state)
+                    if state then
+                        favoritesData[fKey] = { game = gameName, name = scriptInfo.name, url = scriptInfo.url }
+                    else
+                        favoritesData[fKey] = nil
+                    end
+                    saveFavorites()
+                    refreshFavoritesUI()
+                end
+            })
         end
     else
         Tab:Paragraph({ Title = "Nenhum script", Desc = "Os scripts para " .. gameName .. " serão injetados aqui." })
@@ -305,12 +390,10 @@ end
 LogTab:Paragraph({ Title = "Log", Desc = "Join our discord: https://discord.gg/76tHHGBrfz\nMade by @By_Andryx on discord" })
 
 -- ==========================================
--- 7. EXECUÇÃO DO AUTO EXECUTE AO ABRIR
+-- 9. EXECUÇÃO DO AUTO EXECUTE AO ABRIR
 -- ==========================================
--- AQUI ESTÁ A MÁGICA: Verifica se o utilizador forçou ligar/desligar via script
 if getgenv().AutoExecute ~= nil then
     autoExecData.enabled = getgenv().AutoExecute
-    log("Auto Execute forçado via script: " .. tostring(autoExecData.enabled))
 end
 
 if autoExecData.enabled and autoExecData.script ~= "None" and autoExecData.url ~= "None" then
