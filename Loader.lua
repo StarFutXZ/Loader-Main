@@ -197,7 +197,7 @@ local function log(msg: string)
 end
 
 -- ==========================================
--- 6. SISTEMA DE AUTO EXECUTE (INTEGRADO NOS SCRIPTS)
+-- 6. SISTEMA DE AUTO EXECUTE (COM DROPDOWN)
 -- ==========================================
 local AutoExecFile = "EclipseHub_AutoExec.json"
 local autoExecData = { enabled = false, game = "None", script = "None", url = "None" }
@@ -220,26 +220,60 @@ local function saveAutoExec()
     end
 end
 
--- Aba de Settings (Apenas para mostrar o status atual e desligar tudo)
-local SettingsTab = Window:Tab({ Title = "Settings", Icon = "settings" })
-local statusText = "Nenhum script ativo"
-if autoExecData.enabled and autoExecData.script ~= "None" then
-    statusText = autoExecData.game .. " | " .. autoExecData.script
+-- Criar as opções encurtadas para o Dropdown
+local AutoExecOptions = { "None" }
+local optionMap = {} -- Guarda o link real correspondente ao texto encurtado
+
+for _, gameName in ipairs(Games) do
+    local scriptsForGame = GameScripts[gameName]
+    if scriptsForGame and #scriptsForGame > 0 then
+        for _, scriptInfo in ipairs(scriptsForGame) do
+            -- Se o nome do jogo for maior que 10 letras, corta e mete ".."
+            local shortGame = #gameName > 10 and string.sub(gameName, 1, 8) .. ".." or gameName
+            local displayStr = scriptInfo.name .. " (" .. shortGame .. ")"
+            
+            table.insert(AutoExecOptions, displayStr)
+            optionMap[displayStr] = { game = gameName, script = scriptInfo.name, url = scriptInfo.url }
+        end
+    end
 end
 
-local statusLabel = SettingsTab:Paragraph({ Title = "Auto Execute Atual", Desc = statusText })
+-- Descobrir qual é o texto correspondente ao que está guardado
+local currentDisplay = "None"
+if autoExecData.script ~= "None" then
+    for displayStr, data in pairs(optionMap) do
+        if data.game == autoExecData.game and data.script == autoExecData.script then
+            currentDisplay = displayStr
+            break
+        end
+    end
+end
 
-SettingsTab:Button({
-    Title = "Desligar Auto Execute",
-    Desc = "Remove a execução automática de qualquer script.",
-    Callback = function()
-        autoExecData.enabled = false
-        autoExecData.game = "None"
-        autoExecData.script = "None"
-        autoExecData.url = "None"
+-- Aba de Settings
+local SettingsTab = Window:Tab({ Title = "Settings", Icon = "settings" })
+SettingsTab:Paragraph({ Title = "Auto Execute", Desc = "Escolhe um script para ser executado automaticamente assim que o jogo abrir." })
+
+SettingsTab:Dropdown({
+    Title = "Selecionar Script",
+    Desc = "O script será injetado automaticamente quando entrares no jogo.",
+    Values = AutoExecOptions,
+    Value = currentDisplay,
+    Callback = function(option)
+        if option == "None" then
+            autoExecData.enabled = false
+            autoExecData.game = "None"
+            autoExecData.script = "None"
+            autoExecData.url = "None"
+        else
+            local data = optionMap[option]
+            if data then
+                autoExecData.enabled = true
+                autoExecData.game = data.game
+                autoExecData.script = data.script
+                autoExecData.url = data.url
+            end
+        end
         saveAutoExec()
-        statusLabel:SetDesc("Nenhum script ativo")
-        notify("Eclipse", "Auto Execute Desligado.")
     end
 })
 
@@ -252,8 +286,6 @@ for _, gameName in ipairs(Games) do
     
     if scriptsForGame and #scriptsForGame > 0 then
         for _, scriptInfo in ipairs(scriptsForGame) do
-            
-            -- Botão de Executar
             local btn = Tab:Button({
                 Title = scriptInfo.name,
                 Desc = "○ parado (Clique para executar)",
@@ -266,30 +298,6 @@ for _, gameName in ipairs(Games) do
                         end
                     end)
                 end,
-            })
-
-            -- Toggle de Auto Execute para este script específico
-            local isThisAutoExec = autoExecData.enabled and autoExecData.game == gameName and autoExecData.script == scriptInfo.name
-            
-            Tab:Toggle({
-                Title = "Auto Executar (" .. scriptInfo.name .. ")",
-                Desc = "Executar automaticamente ao abrir o jogo?",
-                Value = isThisAutoExec,
-                Callback = function(state)
-                    if state then
-                        autoExecData.enabled = true
-                        autoExecData.game = gameName
-                        autoExecData.script = scriptInfo.name
-                        autoExecData.url = scriptInfo.url
-                        statusLabel:SetDesc(gameName .. " | " .. scriptInfo.name)
-                    else
-                        if autoExecData.game == gameName and autoExecData.script == scriptInfo.name then
-                            autoExecData.enabled = false
-                            statusLabel:SetDesc("Nenhum script ativo")
-                        end
-                    end
-                    saveAutoExec()
-                end
             })
         end
     else
