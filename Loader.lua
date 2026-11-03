@@ -197,7 +197,7 @@ local function log(msg: string)
 end
 
 -- ==========================================
--- 6. SISTEMA DE AUTO EXECUTE (COM DROPDOWN)
+-- 6. SISTEMA DE AUTO EXECUTE (DROPDOWN)
 -- ==========================================
 local AutoExecFile = "EclipseHub_AutoExec.json"
 local autoExecData = { enabled = false, game = "None", script = "None", url = "None" }
@@ -222,13 +222,12 @@ end
 
 -- Criar as opções encurtadas para o Dropdown
 local AutoExecOptions = { "None" }
-local optionMap = {} -- Guarda o link real correspondente ao texto encurtado
+local optionMap = {}
 
 for _, gameName in ipairs(Games) do
     local scriptsForGame = GameScripts[gameName]
     if scriptsForGame and #scriptsForGame > 0 then
         for _, scriptInfo in ipairs(scriptsForGame) do
-            -- Se o nome do jogo for maior que 10 letras, corta e mete ".."
             local shortGame = #gameName > 10 and string.sub(gameName, 1, 8) .. ".." or gameName
             local displayStr = scriptInfo.name .. " (" .. shortGame .. ")"
             
@@ -238,7 +237,6 @@ for _, gameName in ipairs(Games) do
     end
 end
 
--- Descobrir qual é o texto correspondente ao que está guardado
 local currentDisplay = "None"
 if autoExecData.script ~= "None" then
     for displayStr, data in pairs(optionMap) do
@@ -249,7 +247,6 @@ if autoExecData.script ~= "None" then
     end
 end
 
--- Aba de Settings
 local SettingsTab = Window:Tab({ Title = "Settings", Icon = "settings" })
 SettingsTab:Paragraph({ Title = "Auto Execute", Desc = "Escolhe um script para ser executado automaticamente assim que o jogo abrir." })
 
@@ -310,9 +307,15 @@ LogTab:Paragraph({ Title = "Log", Desc = "Join our discord: https://discord.gg/7
 -- ==========================================
 -- 7. EXECUÇÃO DO AUTO EXECUTE AO ABRIR
 -- ==========================================
+-- AQUI ESTÁ A MÁGICA: Verifica se o utilizador forçou ligar/desligar via script
+if getgenv().AutoExecute ~= nil then
+    autoExecData.enabled = getgenv().AutoExecute
+    log("Auto Execute forçado via script: " .. tostring(autoExecData.enabled))
+end
+
 if autoExecData.enabled and autoExecData.script ~= "None" and autoExecData.url ~= "None" then
     task.spawn(function()
-        task.wait(3) -- Espera 3 segundos para o jogo carregar
+        task.wait(3)
         local ok, err = executeScript(autoExecData.script, autoExecData.url)
         if ok then
             notify("Eclipse", "Auto Executado: " .. autoExecData.script)
