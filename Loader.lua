@@ -1,5 +1,5 @@
 --!strict
--- [[ Eclipse Hub — Secure API + HWID System ]]
+-- [[ Eclipse Hub — Secure API + HWID System + Auto Execute ]]
 
 local HttpService = game:GetService("HttpService")
 local player = game.Players.LocalPlayer
@@ -27,7 +27,6 @@ local function _d(data)
     end))
 end
 
--- Token: EclipseLoader2024
 local LOADER_TOKEN = _d("RWNsaXBzZUxvYWRlcjIwMjQ=")
 
 -- ==========================================
@@ -155,7 +154,7 @@ local Window = WindUI:CreateWindow({
 })
 
 -- ==========================================
--- 4. SISTEMA DE EXECUÇÃO DE SCRIPTS (SEM CORREÇÃO AUTOMÁTICA)
+-- 4. SISTEMA DE EXECUÇÃO DE SCRIPTS
 -- ==========================================
 local LoadedScripts: {[string]: thread} = {}
 local FetchedCache: {[string]: string} = {}
@@ -197,6 +196,71 @@ local function log(msg: string)
     LogBox:SetDesc(table.concat(logLines, "\n"))
 end
 
+-- ==========================================
+-- 6. SISTEMA DE AUTO EXECUTE
+-- ==========================================
+local AutoExecFile = "EclipseHub_AutoExec.json"
+
+local function getAutoExec()
+    if isfile and isfile(AutoExecFile) then
+        local ok, content = pcall(readfile, AutoExecFile)
+        if ok and content then
+            local parsedOk, parsedData = pcall(function() return HttpService:JSONDecode(content) end)
+            if parsedOk and type(parsedData) == "table" then
+                return parsedData.game or "None", parsedData.script or "None"
+            end
+        end
+    end
+    return "None", "None"
+end
+
+local function saveAutoExec(game, script)
+    if writefile then
+        pcall(function()
+            writefile(AutoExecFile, HttpService:JSONEncode({ game = game, script = script }))
+        end)
+    end
+end
+
+-- Criar a lista de opções para o Dropdown
+local AutoExecOptions = { "None" }
+for _, gameName in ipairs(Games) do
+    local scriptsForGame = GameScripts[gameName]
+    if scriptsForGame and #scriptsForGame > 0 then
+        for _, scriptInfo in ipairs(scriptsForGame) do
+            table.insert(AutoExecOptions, gameName .. " | " .. scriptInfo.name)
+        end
+    end
+end
+
+local savedGame, savedScript = getAutoExec()
+local currentAutoExec = "None"
+if savedGame ~= "None" and savedScript ~= "None" then
+    currentAutoExec = savedGame .. " | " .. savedScript
+end
+
+-- Aba de Configurações
+local SettingsTab = Window:Tab({ Title = "Settings", Icon = "settings" })
+SettingsTab:Paragraph({ Title = "Auto Execute", Desc = "Escolhe um script para ser executado automaticamente assim que o jogo abrir." })
+
+SettingsTab:Dropdown({
+    Title = "Selecionar Script",
+    Desc = "O script será injetado automaticamente quando entrares no jogo.",
+    Values = AutoExecOptions,
+    Value = currentAutoExec,
+    Callback = function(option)
+        if option == "None" then
+            saveAutoExec("None", "None")
+        else
+            local game, script = string.match(option, "^(.-) %| (.+)$")
+            if game and script then
+                saveAutoExec(game, script)
+            end
+        end
+    end
+})
+
+-- Abas dos Jogos
 for _, gameName in ipairs(Games) do
     local Tab = Window:Tab({ Title = gameName, Icon = "gamepad-2" })
     Tab:Paragraph({ Title = gameName .. " :: Scripts", Desc = "Selecione um script abaixo para injetar no jogo." })
@@ -225,3 +289,27 @@ for _, gameName in ipairs(Games) do
 end
 
 LogTab:Paragraph({ Title = "Log", Desc = "Join our discord: https://discord.gg/76tHHGBrfz\nMade by @By_Andryx on discord" })
+
+-- ==========================================
+-- 7. EXECUÇÃO DO AUTO EXECUTE AO ABRIR
+-- ==========================================
+if savedGame ~= "None" and savedScript ~= "None" then
+    task.spawn(function()
+        task.wait(3) -- Espera 3 segundos para o jogo carregar totalmente antes de executar
+        local scriptsForGame = GameScripts[savedGame]
+        if scriptsForGame then
+            for _, scriptInfo in ipairs(scriptsForGame) do
+                if scriptInfo.name == savedScript then
+                    local ok, err = executeScript(scriptInfo.name, scriptInfo.url)
+                    if ok then
+                        notify("Eclipse", "Auto Executado: " .. scriptInfo.name)
+                        log("AUTO-EXEC OK: " .. scriptInfo.name)
+                    else
+                        log("AUTO-EXEC ERRO: " .. tostring(err))
+                    end
+                    break
+                end
+            end
+        end
+    end)
+end
