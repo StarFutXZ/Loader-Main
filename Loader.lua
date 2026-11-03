@@ -197,66 +197,49 @@ local function log(msg: string)
 end
 
 -- ==========================================
--- 6. SISTEMA DE AUTO EXECUTE
+-- 6. SISTEMA DE AUTO EXECUTE (INTEGRADO NOS SCRIPTS)
 -- ==========================================
 local AutoExecFile = "EclipseHub_AutoExec.json"
+local autoExecData = { enabled = false, game = "None", script = "None", url = "None" }
 
-local function getAutoExec()
-    if isfile and isfile(AutoExecFile) then
-        local ok, content = pcall(readfile, AutoExecFile)
-        if ok and content then
-            local parsedOk, parsedData = pcall(function() return HttpService:JSONDecode(content) end)
-            if parsedOk and type(parsedData) == "table" then
-                return parsedData.game or "None", parsedData.script or "None"
-            end
+if isfile and isfile(AutoExecFile) then
+    local ok, content = pcall(readfile, AutoExecFile)
+    if ok and content then
+        local parsedOk, parsedData = pcall(function() return HttpService:JSONDecode(content) end)
+        if parsedOk and type(parsedData) == "table" then
+            autoExecData = parsedData
         end
     end
-    return "None", "None"
 end
 
-local function saveAutoExec(game, script)
+local function saveAutoExec()
     if writefile then
         pcall(function()
-            writefile(AutoExecFile, HttpService:JSONEncode({ game = game, script = script }))
+            writefile(AutoExecFile, HttpService:JSONEncode(autoExecData))
         end)
     end
 end
 
--- Criar a lista de opções para o Dropdown
-local AutoExecOptions = { "None" }
-for _, gameName in ipairs(Games) do
-    local scriptsForGame = GameScripts[gameName]
-    if scriptsForGame and #scriptsForGame > 0 then
-        for _, scriptInfo in ipairs(scriptsForGame) do
-            table.insert(AutoExecOptions, gameName .. " | " .. scriptInfo.name)
-        end
-    end
-end
-
-local savedGame, savedScript = getAutoExec()
-local currentAutoExec = "None"
-if savedGame ~= "None" and savedScript ~= "None" then
-    currentAutoExec = savedGame .. " | " .. savedScript
-end
-
--- Aba de Configurações
+-- Aba de Settings (Apenas para mostrar o status atual e desligar tudo)
 local SettingsTab = Window:Tab({ Title = "Settings", Icon = "settings" })
-SettingsTab:Paragraph({ Title = "Auto Execute", Desc = "Escolhe um script para ser executado automaticamente assim que o jogo abrir." })
+local statusText = "Nenhum script ativo"
+if autoExecData.enabled and autoExecData.script ~= "None" then
+    statusText = autoExecData.game .. " | " .. autoExecData.script
+end
 
-SettingsTab:Dropdown({
-    Title = "Selecionar Script",
-    Desc = "O script será injetado automaticamente quando entrares no jogo.",
-    Values = AutoExecOptions,
-    Value = currentAutoExec,
-    Callback = function(option)
-        if option == "None" then
-            saveAutoExec("None", "None")
-        else
-            local game, script = string.match(option, "^(.-) %| (.+)$")
-            if game and script then
-                saveAutoExec(game, script)
-            end
-        end
+local statusLabel = SettingsTab:Paragraph({ Title = "Auto Execute Atual", Desc = statusText })
+
+SettingsTab:Button({
+    Title = "Desligar Auto Execute",
+    Desc = "Remove a execução automática de qualquer script.",
+    Callback = function()
+        autoExecData.enabled = false
+        autoExecData.game = "None"
+        autoExecData.script = "None"
+        autoExecData.url = "None"
+        saveAutoExec()
+        statusLabel:SetDesc("Nenhum script ativo")
+        notify("Eclipse", "Auto Execute Desligado.")
     end
 })
 
@@ -269,6 +252,8 @@ for _, gameName in ipairs(Games) do
     
     if scriptsForGame and #scriptsForGame > 0 then
         for _, scriptInfo in ipairs(scriptsForGame) do
+            
+            -- Botão de Executar
             local btn = Tab:Button({
                 Title = scriptInfo.name,
                 Desc = "○ parado (Clique para executar)",
@@ -282,6 +267,30 @@ for _, gameName in ipairs(Games) do
                     end)
                 end,
             })
+
+            -- Toggle de Auto Execute para este script específico
+            local isThisAutoExec = autoExecData.enabled and autoExecData.game == gameName and autoExecData.script == scriptInfo.name
+            
+            Tab:Toggle({
+                Title = "Auto Executar (" .. scriptInfo.name .. ")",
+                Desc = "Executar automaticamente ao abrir o jogo?",
+                Value = isThisAutoExec,
+                Callback = function(state)
+                    if state then
+                        autoExecData.enabled = true
+                        autoExecData.game = gameName
+                        autoExecData.script = scriptInfo.name
+                        autoExecData.url = scriptInfo.url
+                        statusLabel:SetDesc(gameName .. " | " .. scriptInfo.name)
+                    else
+                        if autoExecData.game == gameName and autoExecData.script == scriptInfo.name then
+                            autoExecData.enabled = false
+                            statusLabel:SetDesc("Nenhum script ativo")
+                        end
+                    end
+                    saveAutoExec()
+                end
+            })
         end
     else
         Tab:Paragraph({ Title = "Nenhum script", Desc = "Os scripts para " .. gameName .. " serão injetados aqui." })
@@ -293,23 +302,15 @@ LogTab:Paragraph({ Title = "Log", Desc = "Join our discord: https://discord.gg/7
 -- ==========================================
 -- 7. EXECUÇÃO DO AUTO EXECUTE AO ABRIR
 -- ==========================================
-if savedGame ~= "None" and savedScript ~= "None" then
+if autoExecData.enabled and autoExecData.script ~= "None" and autoExecData.url ~= "None" then
     task.spawn(function()
-        task.wait(3) -- Espera 3 segundos para o jogo carregar totalmente antes de executar
-        local scriptsForGame = GameScripts[savedGame]
-        if scriptsForGame then
-            for _, scriptInfo in ipairs(scriptsForGame) do
-                if scriptInfo.name == savedScript then
-                    local ok, err = executeScript(scriptInfo.name, scriptInfo.url)
-                    if ok then
-                        notify("Eclipse", "Auto Executado: " .. scriptInfo.name)
-                        log("AUTO-EXEC OK: " .. scriptInfo.name)
-                    else
-                        log("AUTO-EXEC ERRO: " .. tostring(err))
-                    end
-                    break
-                end
-            end
+        task.wait(3) -- Espera 3 segundos para o jogo carregar
+        local ok, err = executeScript(autoExecData.script, autoExecData.url)
+        if ok then
+            notify("Eclipse", "Auto Executado: " .. autoExecData.script)
+            log("AUTO-EXEC OK: " .. autoExecData.script)
+        else
+            log("AUTO-EXEC ERRO: " .. tostring(err))
         end
     end)
 end
