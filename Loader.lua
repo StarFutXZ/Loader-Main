@@ -273,7 +273,7 @@ SettingsTab:Dropdown({
 })
 
 -- ==========================================
--- 7. SISTEMA DE FAVORITOS (MENU LIMPO)
+-- 7. SISTEMA DE FAVORITOS (MENU LIMPO CORRIGIDO)
 -- ==========================================
 local FavsFile = "EclipseHub_Favs.json"
 local favoritesData = {}
@@ -317,21 +317,20 @@ for _, gameName in ipairs(Games) do
     end
 end
 
-local favContainer = FavTab:Section({ Title = "Meus Favoritos" })
+local favSection = nil
 
 local function refreshFavoritesUI()
-    if favContainer and favContainer.Container then
-        for _, child in pairs(favContainer.Container:GetChildren()) do
-            if child:IsA("Frame") or child:IsA("TextButton") or child:IsA("TextLabel") then
-                child:Destroy()
-            end
-        end
+    -- Destruir a secção anterior inteira para evitar duplicados e bugs visuais
+    if favSection then
+        pcall(function() favSection:Destroy() end)
     end
+    
+    favSection = FavTab:Section({ Title = "Meus Favoritos" })
 
     local count = 0
     for _, data in pairs(favoritesData) do
         count = count + 1
-        favContainer:Button({
+        favSection:Button({
             Title = data.name .. " (" .. data.game .. ")",
             Desc = "Clique para executar.",
             Callback = function()
@@ -344,7 +343,7 @@ local function refreshFavoritesUI()
     end
 
     if count == 0 then
-        favContainer:Paragraph({ Title = "Vazio", Desc = "Você ainda não adicionou nenhum script aos favoritos." })
+        favSection:Paragraph({ Title = "Vazio", Desc = "Você ainda não adicionou nenhum script aos favoritos." })
     end
 end
 
@@ -367,7 +366,7 @@ FavTab:Dropdown({
             notify("Eclipse", "Adicionado aos Favoritos: " .. data.name)
         end
         saveFavorites()
-        refreshFavoritesUI()
+        refreshFavoritesUI() -- Atualiza a secção limpa
     end
 })
 
