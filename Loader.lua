@@ -197,12 +197,11 @@ local function log(msg: string)
 end
 
 -- ==========================================
--- 6. SISTEMA DE AUTO EXECUTE (COM FICHEIRO)
+-- 6. SISTEMA DE AUTO EXECUTE
 -- ==========================================
 local AutoExecFile = "EclipseHub_AutoExec.json"
 local autoExecData = { enabled = false, game = "None", script = "None", url = "None" }
 
--- Tenta ler do ficheiro local do utilizador
 if isfile and isfile(AutoExecFile) then
     local ok, content = pcall(readfile, AutoExecFile)
     if ok and content then
@@ -214,7 +213,6 @@ if isfile and isfile(AutoExecFile) then
 end
 
 local function saveAutoExec()
-    -- Tenta guardar no ficheiro local do utilizador
     if writefile then
         pcall(function()
             writefile(AutoExecFile, HttpService:JSONEncode(autoExecData))
@@ -223,7 +221,7 @@ local function saveAutoExec()
 end
 
 local AutoExecOptions = { "None" }
-local optionMap = {}
+local autoExecMap = {}
 
 for _, gameName in ipairs(Games) do
     local scriptsForGame = GameScripts[gameName]
@@ -232,14 +230,14 @@ for _, gameName in ipairs(Games) do
             local shortGame = #gameName > 10 and string.sub(gameName, 1, 8) .. ".." or gameName
             local displayStr = scriptInfo.name .. " (" .. shortGame .. ")"
             table.insert(AutoExecOptions, displayStr)
-            optionMap[displayStr] = { game = gameName, script = scriptInfo.name, url = scriptInfo.url }
+            autoExecMap[displayStr] = { game = gameName, script = scriptInfo.name, url = scriptInfo.url }
         end
     end
 end
 
 local currentDisplay = "None"
 if autoExecData.script ~= "None" then
-    for displayStr, data in pairs(optionMap) do
+    for displayStr, data in pairs(autoExecMap) do
         if data.game == autoExecData.game and data.script == autoExecData.script then
             currentDisplay = displayStr
             break
@@ -262,7 +260,7 @@ SettingsTab:Dropdown({
             autoExecData.script = "None"
             autoExecData.url = "None"
         else
-            local data = optionMap[option]
+            local data = autoExecMap[option]
             if data then
                 autoExecData.enabled = true
                 autoExecData.game = data.game
@@ -275,7 +273,7 @@ SettingsTab:Dropdown({
 })
 
 -- ==========================================
--- 7. SISTEMA DE FAVORITOS (COM FICHEIRO)
+-- 7. SISTEMA DE FAVORITOS (MENU LIMPO)
 -- ==========================================
 local FavsFile = "EclipseHub_Favs.json"
 local favoritesData = {}
@@ -302,10 +300,24 @@ local function getFavKey(game, script)
     return game .. "|" .. script
 end
 
--- Criar a Aba de Favoritos
 local FavTab = Window:Tab({ Title = "Favoritos", Icon = "star" })
-FavTab:Paragraph({ Title = "Os teus Favoritos", Desc = "Scripts que marcaste com uma estrela." })
-local favContainer = FavTab:Section({ Title = "Lista" })
+FavTab:Paragraph({ Title = "Gerenciar Favoritos", Desc = "Selecione um script no menu abaixo para adicionar ou remover dos favoritos." })
+
+local allScriptsOptions = { "None" }
+local scriptDataMap = {}
+
+for _, gameName in ipairs(Games) do
+    local scriptsForGame = GameScripts[gameName]
+    if scriptsForGame and #scriptsForGame > 0 then
+        for _, scriptInfo in ipairs(scriptsForGame) do
+            local displayStr = scriptInfo.name .. " (" .. gameName .. ")"
+            table.insert(allScriptsOptions, displayStr)
+            scriptDataMap[displayStr] = { game = gameName, name = scriptInfo.name, url = scriptInfo.url }
+        end
+    end
+end
+
+local favContainer = FavTab:Section({ Title = "Meus Favoritos" })
 
 local function refreshFavoritesUI()
     if favContainer and favContainer.Container then
@@ -332,14 +344,37 @@ local function refreshFavoritesUI()
     end
 
     if count == 0 then
-        favContainer:Paragraph({ Title = "Vazio", Desc = "Vai às abas dos jogos e adiciona scripts aos favoritos." })
+        favContainer:Paragraph({ Title = "Vazio", Desc = "Você ainda não adicionou nenhum script aos favoritos." })
     end
 end
+
+FavTab:Dropdown({
+    Title = "Adicionar / Remover",
+    Desc = "Selecionar um script aqui irá alternar o status de favorito.",
+    Values = allScriptsOptions,
+    Value = "None",
+    Callback = function(option)
+        if option == "None" then return end
+        local data = scriptDataMap[option]
+        if not data then return end
+
+        local fKey = getFavKey(data.game, data.name)
+        if favoritesData[fKey] then
+            favoritesData[fKey] = nil
+            notify("Eclipse", "Removido dos Favoritos: " .. data.name)
+        else
+            favoritesData[fKey] = { game = data.game, name = data.name, url = data.url }
+            notify("Eclipse", "Adicionado aos Favoritos: " .. data.name)
+        end
+        saveFavorites()
+        refreshFavoritesUI()
+    end
+})
 
 refreshFavoritesUI()
 
 -- ==========================================
--- 8. ABAS DOS JOGOS
+-- 8. ABAS DOS JOGOS (LIMPO E SEM TREMENDOS)
 -- ==========================================
 for _, gameName in ipairs(Games) do
     local Tab = Window:Tab({ Title = gameName, Icon = "gamepad-2" })
@@ -349,7 +384,6 @@ for _, gameName in ipairs(Games) do
     
     if scriptsForGame and #scriptsForGame > 0 then
         for _, scriptInfo in ipairs(scriptsForGame) do
-            
             local btn = Tab:Button({
                 Title = scriptInfo.name,
                 Desc = "○ parado (Clique para executar)",
@@ -362,24 +396,6 @@ for _, gameName in ipairs(Games) do
                         end
                     end)
                 end,
-            })
-
-            local fKey = getFavKey(gameName, scriptInfo.name)
-            local isFav = favoritesData[fKey] ~= nil
-
-            Tab:Toggle({
-                Title = "⭐ Favoritar (" .. scriptInfo.name .. ")",
-                Desc = "Adiciona este script à aba de Favoritos.",
-                Value = isFav,
-                Callback = function(state)
-                    if state then
-                        favoritesData[fKey] = { game = gameName, name = scriptInfo.name, url = scriptInfo.url }
-                    else
-                        favoritesData[fKey] = nil
-                    end
-                    saveFavorites()
-                    refreshFavoritesUI()
-                end
             })
         end
     else
