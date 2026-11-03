@@ -374,7 +374,7 @@ FavTab:Dropdown({
 refreshFavoritesUI()
 
 -- ==========================================
--- 8. ABAS DOS JOGOS (LIMPO E SEM TREMENDOS)
+-- 8. ABAS DOS JOGOS (LIMPO)
 -- ==========================================
 for _, gameName in ipairs(Games) do
     local Tab = Window:Tab({ Title = gameName, Icon = "gamepad-2" })
