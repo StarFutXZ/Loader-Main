@@ -37,10 +37,15 @@
       "url": "https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/Script/Dead%20Rails/Nauru%20Hub"
     }
   ],
+  "Sniper Arena": [
+    {
+      "name": "Mario Hub",
+      "url": "https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/Script/Sniper%20Arena"
+    }
+  ],
   "Rivals": [],
   "Doors": [],
   "Blade Ball": [],
   "Murder Mystery 2": [],
-  "Steal An Egg": [],
-  "Sniper Arena": []
+  "Steal An Egg": []
 }
