@@ -43,9 +43,14 @@
       "url": "https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/Script/Sniper%20Arena/Mario%20Hub"
     }
   ],
+  "Murder Mystery 2": [
+    {
+      "name": "Noir Hub",
+      "url": "https://raw.githubusercontent.com/StarFutXZ/Loader-Main/refs/heads/main/Script/Murder%20Mystery%202/Noir%20Hub"
+    }
+  ],
   "Rivals": [],
   "Doors": [],
   "Blade Ball": [],
-  "Murder Mystery 2": [],
   "Steal An Egg": []
 }
